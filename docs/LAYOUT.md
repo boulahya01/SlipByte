@@ -41,7 +41,7 @@ Printer-specific evidence belongs in future printer profiles / compatibility dat
 
 ## Overflow behavior
 
-Overflow is explicit:
+Overflow is explicit.
 
 ### `wrap` (default)
 
@@ -74,7 +74,50 @@ layoutReceipt(document, {
 });
 ```
 
-The error includes the available columns, measured content width, and source receipt node index.
+The error includes the available columns, measured content width, source receipt node index, and text-measurement strategy when available.
+
+## Text measurement
+
+OpenReceipt does not assume one human language or one printer font model.
+
+The default `GRAPHEME_TEXT_MEASURER` counts Unicode grapheme clusters. This means combined characters such as accented graphemes and multi-code-point emoji are kept intact when wrapping/truncating.
+
+The default is deterministic and hardware-independent, but it is **not a claim about physical printer glyph width**.
+
+A device/profile adapter can provide its own `TextMeasurer`:
+
+```ts
+const textMeasurer = {
+  id: "device-font-a",
+  measure(text: string) {
+    // Return the number of printer layout cells used by this text.
+    return measureForThisDevice(text);
+  },
+};
+
+const layout = layoutReceipt(document, {
+  paper: "80mm",
+  textMeasurer,
+});
+```
+
+A column-based measurer must:
+
+- expose `measure(text)`;
+- return a finite non-negative integer cell count;
+- report a normal ASCII space as exactly one cell;
+- throw or return invalid data only when it wants OpenReceipt to fail with a structured diagnostic.
+
+This extension point can model, for example:
+
+- double-width CJK glyphs;
+- printer font A vs font B;
+- vendor-specific character sizing;
+- code-page constraints;
+- raster/fallback layouts;
+- future protocol/device metrics.
+
+The core does not need `if Arabic`, `if Chinese`, or `if Epson` branches. Those are characteristics of content or device capabilities, not application-level product modes.
 
 ## Amount formatting
 
@@ -94,19 +137,17 @@ A formatter that throws or returns invalid output produces the structured `AMOUN
 
 Printable rows become `line` nodes with:
 
-- exact text value
-- bold flag inherited from receipt text intent
-- semantic source (`text`, `item`, `total`, or `divider`)
-- source receipt node index for diagnostics
+- exact text value;
+- bold flag inherited from print intent;
+- semantic source (`text`, `item`, `total`, or `divider`);
+- source receipt node index for diagnostics.
 
 Non-layout controls such as feed and cut are preserved as control nodes for later stages.
 
-The layout layer does not decide whether a physical printer supports those actions. Capability validation belongs to the printer profile / encoder boundary.
+The layout layer does not decide whether a physical printer supports those actions. Capability validation belongs to the device profile / encoder boundary.
 
-## Text width model
+## Generality rule
 
-The first layout implementation uses a deterministic Unicode code-point cell model. This is intentionally simple and hardware-independent.
+The layout engine is not a restaurant layout engine and is not an Arabic/Latin renderer.
 
-It should not be interpreted as a guarantee that every Unicode character occupies one physical printer cell. Arabic/RTL shaping, combining characters, East Asian width, raster fallback, and printer code-page behavior are separate concerns that will be handled by the international-text / printer capability work.
-
-The important contract at this stage is deterministic layout behavior without pretending the model knows capabilities it does not yet know.
+Specific scripts, currencies, businesses, printer brands, and protocols should be represented through data, profiles, capabilities, formatting, or adapters whenever possible rather than adding hard-coded core branches.
