@@ -61,7 +61,19 @@ export const PAPER_80MM: PaperProfile = Object.freeze({
 });
 
 export function paperProfile(size: BuiltInPaperSize): PaperProfile {
-  return size === "58mm" ? PAPER_58MM : PAPER_80MM;
+  if (size === "58mm") {
+    return PAPER_58MM;
+  }
+
+  if (size === "80mm") {
+    return PAPER_80MM;
+  }
+
+  throw new OpenReceiptError(
+    "INVALID_PAPER_PROFILE",
+    'Built-in paper size must be either "58mm" or "80mm".',
+    { size },
+  );
 }
 
 export function layoutReceipt(
@@ -69,8 +81,17 @@ export function layoutReceipt(
   options: LayoutOptions = {},
 ): LayoutDocument {
   const paper = resolvePaper(options.paper ?? "80mm");
-  const overflow = options.overflow ?? "wrap";
+  const overflow = resolveOverflow(options.overflow ?? "wrap");
   const formatAmount = options.formatAmount ?? defaultAmountFormatter;
+
+  if (typeof formatAmount !== "function") {
+    throw new OpenReceiptError(
+      "INVALID_LAYOUT_OPTION",
+      "formatAmount must be a function when provided.",
+      { formatAmountType: typeof formatAmount },
+    );
+  }
+
   const nodes: LayoutNode[] = [];
 
   document.nodes.forEach((node, sourceNodeIndex) => {
@@ -149,12 +170,18 @@ function resolvePaper(paper: BuiltInPaperSize | PaperProfile): PaperProfile {
     return paperProfile(paper);
   }
 
+  const candidate = paper as Partial<PaperProfile> | null;
   if (
-    !paper.id.trim() ||
-    !Number.isFinite(paper.widthMm) ||
-    paper.widthMm <= 0 ||
-    !Number.isInteger(paper.columns) ||
-    paper.columns < 8
+    candidate === null ||
+    typeof candidate !== "object" ||
+    typeof candidate.id !== "string" ||
+    !candidate.id.trim() ||
+    typeof candidate.widthMm !== "number" ||
+    !Number.isFinite(candidate.widthMm) ||
+    candidate.widthMm <= 0 ||
+    typeof candidate.columns !== "number" ||
+    !Number.isInteger(candidate.columns) ||
+    candidate.columns < 8
   ) {
     throw new OpenReceiptError(
       "INVALID_PAPER_PROFILE",
@@ -163,7 +190,23 @@ function resolvePaper(paper: BuiltInPaperSize | PaperProfile): PaperProfile {
     );
   }
 
-  return Object.freeze({ ...paper });
+  return Object.freeze({
+    id: candidate.id,
+    widthMm: candidate.widthMm,
+    columns: candidate.columns,
+  });
+}
+
+function resolveOverflow(value: LayoutOverflow): LayoutOverflow {
+  if (value === "wrap" || value === "truncate" || value === "error") {
+    return value;
+  }
+
+  throw new OpenReceiptError(
+    "INVALID_LAYOUT_OPTION",
+    'overflow must be "wrap", "truncate", or "error".',
+    { overflow: value },
+  );
 }
 
 function defaultAmountFormatter(amount: number): string {
@@ -174,7 +217,7 @@ function safeFormatAmount(
   amount: number,
   formatter: (amount: number) => string,
 ): string {
-  let formatted: string;
+  let formatted: unknown;
 
   try {
     formatted = formatter(amount);
@@ -186,7 +229,7 @@ function safeFormatAmount(
     );
   }
 
-  if (!formatted.trim()) {
+  if (typeof formatted !== "string" || !formatted.trim()) {
     throw new OpenReceiptError(
       "AMOUNT_FORMAT_FAILED",
       "The configured amount formatter must return non-empty text.",
