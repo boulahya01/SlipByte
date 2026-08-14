@@ -1,3 +1,14 @@
+export {
+  defineDeviceProfile,
+  requireCapability,
+  resolveCapability,
+} from "./capabilities.js";
+export type {
+  CapabilityResolution,
+  CapabilitySupport,
+  DeviceCapability,
+  DeviceProfile,
+} from "./capabilities.js";
 export { OpenReceiptError } from "./errors.js";
 export type { OpenReceiptErrorCode } from "./errors.js";
 export {
