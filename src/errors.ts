@@ -6,6 +6,7 @@ export type OpenReceiptErrorCode =
   | "INVALID_PAPER_PROFILE"
   | "INVALID_LAYOUT_OPTION"
   | "AMOUNT_FORMAT_FAILED"
+  | "TEXT_MEASURE_FAILED"
   | "LAYOUT_OVERFLOW";
 
 export class OpenReceiptError extends Error {
