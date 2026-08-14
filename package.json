@@ -1,0 +1,50 @@
+{
+  "name": "openreceipt",
+  "version": "0.0.0-dev",
+  "description": "TypeScript-first toolkit for building and printing thermal receipts.",
+  "type": "module",
+  "license": "MIT",
+  "sideEffects": false,
+  "files": [
+    "dist"
+  ],
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "test": "npm run build && node --test dist/**/*.test.js",
+    "check": "npm run typecheck && npm test"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "@types/node": ">=20 <26",
+    "typescript": ">=5.5 <7"
+  },
+  "keywords": [
+    "thermal-printer",
+    "receipt",
+    "escpos",
+    "esc-pos",
+    "pos",
+    "point-of-sale",
+    "printer",
+    "typescript"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/boulahya01/OpenReceipt.git"
+  },
+  "bugs": {
+    "url": "https://github.com/boulahya01/OpenReceipt/issues"
+  },
+  "homepage": "https://github.com/boulahya01/OpenReceipt#readme"
+}
