@@ -5,6 +5,8 @@ import type {
   ReceiptNode,
 } from "./types.js";
 
+const UNSAFE_CONTROL_CHARACTER = /[\u0000-\u0009\u000B\u000C\u000E-\u001F\u007F]/u;
+
 export class ReceiptBuilder {
   #nodes: ReceiptNode[] = [];
 
@@ -12,14 +14,7 @@ export class ReceiptBuilder {
     value: string,
     options: { align?: Alignment; bold?: boolean } = {},
   ): this {
-    const normalized = value.trim();
-    if (!normalized) {
-      throw new OpenReceiptError(
-        "INVALID_TEXT",
-        "Receipt text cannot be empty.",
-        { value },
-      );
-    }
+    assertSafeText(value, "text");
 
     this.#nodes.push({
       type: "text",
@@ -36,13 +31,7 @@ export class ReceiptBuilder {
   }
 
   item(name: string, quantity: number, unitPrice: number): this {
-    if (!name.trim()) {
-      throw new OpenReceiptError(
-        "INVALID_TEXT",
-        "Receipt item name cannot be empty.",
-        { name },
-      );
-    }
+    assertSafeText(name, "item name");
 
     if (!Number.isFinite(quantity) || quantity <= 0) {
       throw new OpenReceiptError(
@@ -65,13 +54,7 @@ export class ReceiptBuilder {
   }
 
   total(label: string, amount: number): this {
-    if (!label.trim()) {
-      throw new OpenReceiptError(
-        "INVALID_TEXT",
-        "Receipt total label cannot be empty.",
-        { label },
-      );
-    }
+    assertSafeText(label, "total label");
 
     if (!Number.isFinite(amount) || amount < 0) {
       throw new OpenReceiptError(
@@ -117,4 +100,26 @@ export class ReceiptBuilder {
 
 export function receipt(): ReceiptBuilder {
   return new ReceiptBuilder();
+}
+
+function assertSafeText(value: string, field: string): void {
+  if (typeof value !== "string" || !value.trim()) {
+    throw new OpenReceiptError(
+      "INVALID_TEXT",
+      `Receipt ${field} must be non-empty text.`,
+      { field, receivedType: typeof value },
+    );
+  }
+
+  const match = value.match(UNSAFE_CONTROL_CHARACTER);
+  if (match) {
+    throw new OpenReceiptError(
+      "INVALID_TEXT",
+      `Receipt ${field} contains a control character that is not allowed in normal text.`,
+      {
+        field,
+        codePoint: match[0]?.codePointAt(0),
+      },
+    );
+  }
 }
