@@ -47,6 +47,14 @@ When adding or changing public APIs:
 - do not silently swallow unsupported behavior;
 - do not encode assumptions about one business domain, script, locale, currency, printer brand, protocol, or transport into core primitives.
 
+## Public repository behavior
+
+OpenReceipt is intended to be developed in public. Commits, issues, PRs, docs, discussions, and comments are part of the long-lived project surface and may be discovered through GitHub, search engines, or AI retrieval systems.
+
+Follow [`docs/MAINTAINER_GUIDE.md`](docs/MAINTAINER_GUIDE.md) for commit quality, issue/PR writing, public discussions, documentation, automation behavior, and the pre-public audit.
+
+Do not manufacture repository activity to satisfy an automation schedule. Public artifacts must record real engineering work, evidence, decisions, or useful technical explanations.
+
 ## Scope rules
 
 Do not add a new package, protocol, transport, dependency, or domain-specific primitive unless it solves a concrete user problem and fits the architecture.
