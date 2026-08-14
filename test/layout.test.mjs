@@ -170,3 +170,59 @@ test("rejects amount formatters that return invalid output", () => {
       error.code === "AMOUNT_FORMAT_FAILED",
   );
 });
+
+test("default measurement keeps grapheme clusters intact", () => {
+  const family = "👨‍👩‍👧‍👦";
+  const document = receipt().text(`1234567${family}`).toDocument();
+
+  const layout = layoutReceipt(document, {
+    paper: { id: "eight-cells", widthMm: 20, columns: 8 },
+    overflow: "error",
+  });
+
+  const line = layout.nodes[0];
+  assert.equal(line.type, "line");
+  assert.equal(line.value, `1234567${family}`);
+});
+
+test("supports device-specific text width models without changing receipt intent", () => {
+  const doubleWidth = new Set(["你", "好", "界"]);
+  const textMeasurer = {
+    id: "example-wide-glyphs",
+    measure(text) {
+      return Array.from(text).reduce(
+        (width, character) => width + (doubleWidth.has(character) ? 2 : 1),
+        0,
+      );
+    },
+  };
+
+  const document = receipt().text("12345界界").toDocument();
+  const layout = layoutReceipt(document, {
+    paper: { id: "eight-cells", widthMm: 20, columns: 8 },
+    overflow: "wrap",
+    textMeasurer,
+  });
+
+  assert.deepEqual(
+    layout.nodes.map((node) => (node.type === "line" ? node.value : node.type)),
+    ["12345界", "界"],
+  );
+});
+
+test("rejects broken text measurement strategies with structured errors", () => {
+  const document = receipt().text("Hello").toDocument();
+
+  assert.throws(
+    () =>
+      layoutReceipt(document, {
+        textMeasurer: {
+          id: "broken",
+          measure: () => Number.NaN,
+        },
+      }),
+    (error) =>
+      error instanceof OpenReceiptError &&
+      error.code === "TEXT_MEASURE_FAILED",
+  );
+});
