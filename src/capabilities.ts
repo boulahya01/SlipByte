@@ -27,39 +27,59 @@ export function defineDeviceProfile(input: {
   id: string;
   capabilities?: readonly DeviceCapability[];
 }): DeviceProfile {
-  if (!input || typeof input !== "object" || !input.id?.trim()) {
+  const candidate = input as
+    | { id?: unknown; capabilities?: unknown }
+    | null
+    | undefined;
+
+  if (
+    candidate === null ||
+    candidate === undefined ||
+    typeof candidate !== "object" ||
+    typeof candidate.id !== "string" ||
+    !candidate.id.trim()
+  ) {
     throw new OpenReceiptError(
       "INVALID_DEVICE_PROFILE",
-      "Device profiles require a non-empty id.",
+      "Device profiles require a non-empty string id.",
       { profile: input },
     );
   }
 
-  const capabilities = input.capabilities ?? [];
+  const profileId = candidate.id.trim();
+  const capabilities = candidate.capabilities ?? [];
   if (!Array.isArray(capabilities)) {
     throw new OpenReceiptError(
       "INVALID_DEVICE_PROFILE",
       "Device profile capabilities must be an array.",
-      { profileId: input.id },
+      { profileId },
     );
   }
 
   const seen = new Set<string>();
-  const normalized = capabilities.map((capability, index) => {
-    if (!capability || typeof capability !== "object") {
-      throw invalidCapability(input.id, index, capability);
+  const normalized = capabilities.map((rawCapability, index) => {
+    const capability = rawCapability as
+      | { id?: unknown; support?: unknown; evidence?: unknown }
+      | null;
+
+    if (
+      capability === null ||
+      typeof capability !== "object" ||
+      typeof capability.id !== "string" ||
+      !capability.id.trim() ||
+      !isCapabilitySupport(capability.support) ||
+      (capability.evidence !== undefined &&
+        typeof capability.evidence !== "string")
+    ) {
+      throw invalidCapability(profileId, index, rawCapability);
     }
 
-    const id = capability.id?.trim();
-    if (!id || !isCapabilitySupport(capability.support)) {
-      throw invalidCapability(input.id, index, capability);
-    }
-
+    const id = capability.id.trim();
     if (seen.has(id)) {
       throw new OpenReceiptError(
         "INVALID_DEVICE_PROFILE",
         `Device profile contains duplicate capability "${id}".`,
-        { profileId: input.id, capabilityId: id },
+        { profileId, capabilityId: id },
       );
     }
     seen.add(id);
@@ -73,7 +93,7 @@ export function defineDeviceProfile(input: {
   });
 
   return Object.freeze({
-    id: input.id.trim(),
+    id: profileId,
     capabilities: Object.freeze(normalized),
   });
 }
@@ -82,8 +102,7 @@ export function resolveCapability(
   profile: DeviceProfile,
   capabilityId: string,
 ): CapabilityResolution {
-  const id = capabilityId.trim();
-  if (!id) {
+  if (typeof capabilityId !== "string" || !capabilityId.trim()) {
     throw new OpenReceiptError(
       "INVALID_CAPABILITY",
       "Capability ids must be non-empty strings.",
@@ -91,6 +110,7 @@ export function resolveCapability(
     );
   }
 
+  const id = capabilityId.trim();
   const capability = profile.capabilities.find((entry) => entry.id === id);
   if (!capability) {
     return Object.freeze({ id, support: "unknown" });
@@ -139,7 +159,7 @@ function invalidCapability(
 ): OpenReceiptError {
   return new OpenReceiptError(
     "INVALID_CAPABILITY",
-    "Capabilities require a non-empty id and a valid support value.",
+    "Capabilities require a non-empty string id, a valid support value, and optional string evidence.",
     { profileId, index, capability },
   );
 }
