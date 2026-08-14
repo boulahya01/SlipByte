@@ -50,3 +50,25 @@ test("uses structured errors for invalid input", () => {
       error.details.quantity === 0,
   );
 });
+
+test("rejects ESC/POS control bytes in normal receipt text", () => {
+  assert.throws(
+    () => receipt().text(`Coffee\u001b@`),
+    (error) =>
+      error instanceof OpenReceiptError &&
+      error.code === "INVALID_TEXT" &&
+      error.details.codePoint === 27 &&
+      !("value" in error.details),
+  );
+});
+
+test("rejects invalid plain JavaScript text values without leaking content", () => {
+  assert.throws(
+    () => receipt().item(null, 1, 10),
+    (error) =>
+      error instanceof OpenReceiptError &&
+      error.code === "INVALID_TEXT" &&
+      error.details.receivedType === "object" &&
+      !("name" in error.details),
+  );
+});

@@ -2,7 +2,12 @@ export type OpenReceiptErrorCode =
   | "INVALID_TEXT"
   | "INVALID_QUANTITY"
   | "INVALID_AMOUNT"
-  | "INVALID_FEED_LINES";
+  | "INVALID_FEED_LINES"
+  | "INVALID_PAPER_PROFILE"
+  | "INVALID_LAYOUT_OPTION"
+  | "AMOUNT_FORMAT_FAILED"
+  | "TEXT_MEASURE_FAILED"
+  | "LAYOUT_OVERFLOW";
 
 export class OpenReceiptError extends Error {
   readonly code: OpenReceiptErrorCode;

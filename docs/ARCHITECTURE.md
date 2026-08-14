@@ -2,140 +2,229 @@
 
 ## Goal
 
-OpenReceipt separates what an application wants to print from how a particular printer receives and renders it.
+OpenReceipt separates **what an application wants to print** from **how a particular device receives and renders it**.
+
+The architecture must not assume one business domain, one human language/script, one printer brand, one protocol, or one transport.
 
 ```text
-Application
-    ↓
-Receipt builder
-    ↓
-Receipt document
-    ↓
-Layout engine
-    ↓
-Printer profile
-    ↓
-Protocol encoder
-    ↓
-Transport
-    ↓
-Printer
+Application / AI coding agent
+            ↓
+       Print intent API
+            ↓
+       Print document
+            ↓
+        Layout engine
+            ↓
+      Device profile
+            ↓
+      Protocol encoder
+            ↓
+        Transport
+            ↓
+       Output device
 ```
 
-## 1. Receipt document
+OpenReceipt begins with thermal receipt printers because that is the concrete problem being solved first. The abstractions above should remain general enough that adding another compatible protocol, transport, or print workflow does not require rewriting application intent.
 
-The receipt document is hardware-independent application intent.
+## 1. Print document
 
-Examples:
+The document is hardware-independent application intent.
 
-- text
-- item rows
-- totals
-- dividers
-- QR codes
-- barcodes
-- images
-- feed
-- cut
+Current and planned primitives include:
 
-The receipt document must not contain TCP addresses, USB identifiers, ESC/POS bytes, printer-brand conditions, or operating-system implementation details.
+- text;
+- rows/items;
+- totals/values;
+- dividers;
+- QR codes;
+- barcodes;
+- images;
+- feed;
+- cut;
+- other explicit hardware actions where appropriate.
+
+The document must not contain TCP addresses, USB identifiers, ESC/POS bytes, printer-brand conditions, operating-system implementation details, or assumptions about one business vertical.
+
+Semantic convenience APIs may exist, but the underlying model should remain useful outside restaurants or retail.
 
 ## 2. Layout engine
 
-The layout engine turns receipt intent into a representation constrained by a paper/profile width.
+The layout engine converts print intent into a deterministic representation constrained by a media/device profile.
 
-Responsibilities will include:
+Responsibilities include:
 
-- 58 mm and 80 mm paper profiles;
+- media width/profile handling;
 - wrapping;
 - columns;
 - alignment;
-- line width calculation;
-- international text layout;
-- image sizing.
+- text measurement;
+- arbitrary Unicode/mixed-script layout;
+- image sizing;
+- explicit overflow behavior.
 
-Layout should remain testable without physical hardware.
+Layout must remain testable without physical hardware.
 
-## 3. Printer profile
+Text layout must use an explicit measurement strategy rather than assuming every Unicode code point occupies one printer cell. Latin, Arabic/RTL, CJK, combining marks, emoji, and mixed-script strings are test cases for the same general text pipeline.
 
-A printer profile describes capabilities and known quirks.
+## 3. Device / printer profile
 
-Examples of capabilities:
+A profile describes capabilities, limits, and known quirks of a target device or device family.
 
+Examples:
+
+- printable columns / width;
 - cutter;
 - cash drawer pulse;
 - native QR;
 - native barcode;
 - status query;
-- supported code pages;
-- raster image support.
+- supported encodings/code pages;
+- raster image support;
+- text metrics / font modes;
+- protocol-specific limitations.
 
-Application code should query or request capabilities rather than branch on brands.
+Application code should request capabilities rather than branch on brands.
+
+Compatibility claims must be evidence-based. A brand name or `ESC/POS compatible` label is not enough to claim support for every capability.
 
 ## 4. Protocol encoder
 
-The encoder translates laid-out receipt operations into bytes for a printer protocol.
+The encoder translates laid-out operations into a printer/device protocol.
 
-V1 protocol target: ESC/POS.
+First protocol target: ESC/POS.
 
-Encoders must not own network or USB connections.
+ESC/POS is an adapter behind the core architecture, not the definition of OpenReceipt.
+
+Encoders:
+
+- must not own network/USB connections;
+- must not accept untrusted application text as raw control bytes;
+- must validate requested capabilities;
+- should produce deterministic output for deterministic input/profile data.
+
+Future encoders can be added without changing receipt-building code when the same print intent is meaningful for them.
 
 ## 5. Transport
 
-A transport only moves encoded bytes and, where supported, reads responses.
+A transport moves encoded data and, where supported, reads responses.
 
 Initial targets:
 
 - TCP;
 - USB where practical.
 
-Future transports may include serial, operating-system print queues, or a local print agent. Adding a transport should not require changing receipt-building code.
+Future transports may include:
 
-## Failure model
+- serial;
+- operating-system print queues;
+- local print agents;
+- other device communication adapters.
 
-Expected failures should use structured error codes and useful metadata.
+Adding a transport must not require changing document/layout logic.
+
+## 6. Capability model
+
+Capabilities are the boundary between application intent and real hardware support.
 
 Examples:
 
-- connection failure;
-- unsupported capability;
-- invalid configuration;
-- printer unavailable;
-- paper out;
-- cover open;
-- encoding fallback used.
-
-A low-level system error may be preserved as a cause, but application developers should receive an OpenReceipt-level explanation.
-
-## Fallbacks
-
-Fallbacks must be explicit and safe.
-
-Example:
-
 ```text
-Arabic text
-   ↓
-native printer encoding available? ── yes ─→ native output
-   │
-   no
-   ↓
-raster text fallback
+cut
+cash-drawer
+qr-native
+barcode-native
+raster
+status-query
+text-encoding
 ```
 
-The library should expose when an important fallback occurs instead of pretending every printer handled the feature natively.
+The application asks for an operation. The selected profile/encoder determines whether that operation is native, requires a safe fallback, or is unsupported.
 
-## AI-agent design requirement
+This prevents code such as:
 
-Public types and documentation are part of the API. Coding agents should be able to determine:
+```text
+if brand == Epson ...
+if brand == XPrinter ...
+```
+
+from spreading through user applications.
+
+## 7. Fallback model
+
+Fallbacks must be explicit, safe, and observable.
+
+General example:
+
+```text
+requested content/operation
+          ↓
+native capability available? ── yes ─→ native output
+          │
+          no
+          ↓
+safe fallback available? ────── yes ─→ fallback + diagnostic
+          │
+          no
+          ↓
+structured unsupported-capability error
+```
+
+Examples include rasterizing text/images when native device encoding is insufficient or generating a barcode as raster content when a native barcode implementation is unreliable.
+
+A fallback should never silently corrupt user content.
+
+## 8. Failure and diagnostics model
+
+Expected failures use structured error codes and useful metadata.
+
+Examples:
+
+- invalid configuration;
+- unsupported capability;
+- connection failure;
+- device unavailable;
+- timeout;
+- paper out;
+- cover open;
+- invalid encoding;
+- fallback used;
+- malformed profile;
+- unsafe control input.
+
+A low-level system error may be preserved as a cause, but application developers and AI agents should receive an OpenReceipt-level explanation and, where practical, a remediation hint.
+
+Diagnostics must avoid leaking receipt data, credentials, device secrets, or network secrets by default.
+
+## 9. AI-agent design requirement
+
+Public types and documentation are part of the executable product contract.
+
+Coding agents should be able to determine:
 
 - what an API does;
 - required input;
 - defaults;
-- supported capability;
+- capabilities;
 - expected output;
 - structured failures;
 - fallback behavior;
-- relevant edge cases.
+- relevant edge cases;
+- whether behavior is hardware-independent or device-specific.
 
-If correct usage requires reading internal implementation code, the public interface is not finished.
+Machine-readable profiles/capabilities should be preferred over prose-only compatibility rules where practical.
+
+If correct usage requires reading implementation internals, guessing from a printer brand, or copying undocumented raw bytes, the public interface is not finished.
+
+## Non-goals for the core
+
+The core should not become:
+
+- restaurant-specific business logic;
+- a locale/currency formatter;
+- an Arabic-specific renderer;
+- an Epson-specific SDK;
+- a giant raw ESC/POS command dump;
+- a transport implementation mixed into layout;
+- an operating-system printer manager.
+
+Those concerns can be composed around the core where needed without limiting the common printing model.
