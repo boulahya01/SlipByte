@@ -2,7 +2,7 @@
 
 OpenReceipt is intended to be developed in public. Repository history and discussion should remain useful to developers long after a change is merged.
 
-This guide applies to maintainers, contributors, and coding agents.
+This guide applies to maintainers, contributors, coding agents, and scheduled automation.
 
 ## Public writing standard
 
@@ -37,9 +37,9 @@ Avoid:
 - `Improve project`
 - checkpoint commits created only because an automation run occurred.
 
-Use a commit body only when the rationale, compatibility impact, migration concern, or architectural constraint is not obvious from the change itself.
+Use a commit body only when rationale, compatibility impact, migration concern, or an architectural constraint is not obvious from the change itself.
 
-Noisy intermediate commits should normally be squashed before merge.
+Noisy intermediate commits should normally be squashed before merge when doing so is safe.
 
 ## Issues
 
@@ -47,17 +47,11 @@ Create an issue only for a real problem, requirement, investigation, or independ
 
 Issue titles should describe the concrete developer or hardware problem in natural technical language. Search discoverability should come from accurate terminology, not keyword stuffing.
 
-A useful issue normally records:
-
-- the problem or decision being investigated;
-- observed behavior and relevant environment when known;
-- expected behavior or the question that must be resolved;
-- evidence and constraints;
-- a completion condition when one is useful.
+A useful issue normally records the problem or decision being investigated, observed behavior and relevant environment when known, evidence/constraints, and a completion condition when useful.
 
 Do not create an issue to mirror every commit or PR.
 
-When an issue resolves a real, searchable printing problem, preserve the final technical explanation and evidence before closing it. A closed issue should remain useful to somebody who finds it months later through GitHub, search, or an AI retrieval system.
+When an issue resolves a real, searchable printing problem, preserve the final technical explanation and evidence before closing it. Closed issues are durable engineering knowledge, not clutter to delete.
 
 ## Pull requests
 
@@ -65,7 +59,7 @@ A pull request should explain the engineering change rather than narrate the dev
 
 Include only what materially helps review:
 
-- the behavior or contract changed;
+- behavior or contract changed;
 - important architecture decisions;
 - validation evidence;
 - safety or compatibility implications;
@@ -74,6 +68,55 @@ Include only what materially helps review:
 Do not claim tests, compatibility, benchmarks, or physical hardware validation that did not happen.
 
 Prefer focused PRs with coherent histories. A feature or fix PR should normally be squash-merged after its quality gates pass.
+
+### Autonomous merge gate
+
+Automated maintainers may merge their own focused PRs, but only after the same engineering checks expected from a human maintainer:
+
+- scope is coherent and complete;
+- architecture and public API boundaries were reviewed;
+- relevant tests pass;
+- typecheck/build pass when applicable;
+- no known regression or unresolved review concern remains;
+- no secret, unsafe artifact, or generated junk is introduced;
+- docs match changed public behavior;
+- compatibility claims are backed by evidence;
+- disruptive hardware behavior is explicit and capability-aware;
+- the PR is based on current `main` or was safely updated;
+- required CI is green when CI is functioning.
+
+A GitHub Actions workflow that fails before jobs start is not passing CI.
+
+For stacked PRs, merge the base PR first, update the dependent PR onto the new `main`, rerun relevant validation, inspect the resulting diff, then decide whether the dependent PR can merge.
+
+Do not enable or use automation to bypass branch rules or required checks.
+
+## Stateful automation
+
+Scheduled maintenance is one continuous engineering process, not a collection of independent hourly tasks.
+
+Automation should resume the current workstream from the previous checkpoint, keep one primary milestone active, and avoid creating a new PR or issue merely because another scheduled run occurred.
+
+A run does not need to produce code. Review, test, investigate, or leave the repository unchanged when that is the highest-value safe action.
+
+If one task is blocked, record the blocker once and continue an architecturally independent task when possible. Do not spend repeated runs restating the same failure.
+
+## Completed work and cleanup
+
+Preserve durable engineering history:
+
+- merged PRs;
+- closed solved issues;
+- useful comments/discussions;
+- meaningful commits;
+- compatibility findings;
+- architecture decisions;
+- research evidence;
+- release notes.
+
+Only remove temporary operational clutter from active state: completed TODO entries, resolved blockers, duplicate active trackers, obsolete temporary notes, and safely merged temporary branches where cleanup is appropriate.
+
+Do not rewrite history to make automation invisible.
 
 ## Comments and discussions
 
@@ -89,7 +132,7 @@ Never simulate community activity or create fake conversations.
 
 Write documentation for developers first.
 
-Use precise vocabulary such as `ESC/POS`, `USB printer`, `TCP thermal printer`, `code page`, `raster image`, `browser local printing`, or `cutter capability` when those terms accurately describe the problem. This naturally improves search and AI retrieval without turning documentation into SEO copy.
+Use precise vocabulary such as `ESC/POS`, `USB printer`, `TCP thermal printer`, `code page`, `raster image`, `browser local printing`, or `cutter capability` when those terms accurately describe the problem. Useful technical writing naturally improves search and AI retrieval without turning documentation into SEO copy.
 
 Documentation must clearly distinguish:
 
@@ -99,20 +142,26 @@ Documentation must clearly distinguish:
 - compatibility verified with evidence;
 - compatibility that remains unknown.
 
-## Automation and AI-assisted maintenance
+## External research
 
-Coding agents and automation must follow the same engineering and public-writing standards as any contributor.
+Community reports, Reddit threads, issues in other projects, standards, and vendor documentation can expose real printing problems. Research supports engineering; it is not an activity quota.
 
-They must not:
+Record a finding when it changes a requirement, validates a design decision, documents a compatibility problem, or produces a reusable technical explanation. Preserve useful external-problem research even after the related code is finished because it may support future docs, debugging, support, and discoverability.
 
-- manufacture activity to satisfy a schedule;
-- create repetitive boilerplate across issues or PRs;
-- invent a human testing story or personal anecdote;
-- represent inference as measured hardware behavior;
-- create promotional GitHub content without an engineering reason;
-- repeatedly reopen or restate a known blocker instead of making progress elsewhere.
+Do not convert an interesting external post into roadmap scope unless it fits OpenReceipt's product boundary.
 
-When provenance matters to a technical claim, state the evidence rather than creating a persona. For example, prefer `validated by contract tests` or `not yet tested on physical hardware` over implying who performed the test.
+## Owner-only decisions
+
+Automation should escalate rather than act autonomously on:
+
+- repository visibility changes;
+- npm publication;
+- breaking public API decisions with multiple viable directions;
+- security or legal/licensing concerns;
+- destructive repository changes;
+- paid services or new costs;
+- credentials/secrets;
+- unsupported hardware compatibility claims.
 
 ## Before making the repository public
 
@@ -129,4 +178,6 @@ Perform a public-surface audit covering at least:
 - documentation that describes features not yet implemented;
 - release and CI blockers.
 
-Do not optimize history for appearance by falsifying authorship or evidence. The objective is a clean, useful engineering record.
+Making the source repository public is not the same as publishing a stable npm release. The repository may be public while OpenReceipt is explicitly marked early development.
+
+Do not optimize history for appearance by falsifying authorship or evidence. The objective is a clean, truthful, useful engineering record.
