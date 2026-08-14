@@ -2,87 +2,81 @@
 
 > Thermal printing should feel like using a normal software API, not programming hardware.
 
-OpenReceipt is an open-source, TypeScript-first toolkit for building and printing thermal receipts. It is designed for developers and AI coding agents: predictable APIs, strong types, structured errors, explicit capabilities, and minimal printer-specific knowledge in application code.
+OpenReceipt is an open-source, TypeScript-first toolkit for building reliable printing workflows around thermal printers and related hardware.
+
+It is designed for both developers and AI coding agents: predictable APIs, strong types, structured errors, explicit capabilities, and minimal device-specific knowledge in application code.
+
+## Product boundary
+
+OpenReceipt starts with thermal receipt printing because that is the concrete problem we are solving first, but the core is **not tied to one business, human language, printer brand, protocol, or connection type**.
+
+The architecture should let the same application intent work across compatible hardware through profiles, capabilities, protocol encoders, and transports.
+
+Examples such as restaurants, retail, Arabic/RTL, CJK, emoji, Epson-compatible devices, TCP, and USB are use cases or conformance cases—not hard-coded product modes.
 
 ## Status
 
-**Early development — not released to npm yet.**
+OpenReceipt is in early development. The current focus is validating the core developer experience and architecture before claiming broad physical-printer compatibility.
 
-The repository is intentionally validating the developer experience and architecture before making broad hardware compatibility claims. APIs may change before the first release.
+### Implemented in the current foundation
 
-## Why OpenReceipt
+- TypeScript-first print/receipt document model
+- chainable receipt builder
+- structured OpenReceipt errors
+- input validation
+- raw control-character rejection in normal text fields
+- hardware-independent architecture boundaries
+- public contribution/security/support policies
 
-From an application's perspective, the task is simple: build a receipt and print it. In practice, thermal printing crosses several unrelated concerns:
+### In active development
 
-```text
-Receipt layout
-      ↓
-Text encoding / RTL
-      ↓
-Printer capabilities
-      ↓
-ESC/POS encoding
-      ↓
-TCP / USB / other transport
-      ↓
-Operating system + hardware
-```
+- deterministic layout engine
+- 58 mm / 80 mm convenience profiles
+- custom media/column profiles
+- explicit wrapping/truncation/error behavior
+- extensible text measurement for arbitrary Unicode and device metrics
 
-OpenReceipt aims to give application code one clear model while keeping those layers separate internally.
+### Planned V1 hardware path
+
+- capability/device profile model
+- ESC/POS encoder
+- TCP transport
+- practical USB transport
+- QR codes and barcodes
+- images/logos
+- cut and cash-drawer actions
+- mock/preview workflows
+- robust mixed-script/international text handling and safe fallbacks
+- clear diagnostics and device errors
+
+## What OpenReceipt wants to fix
+
+Printing is fragmented across layout, printer protocols, hardware quirks, text encoding, network/USB connections, operating-system behavior, device capabilities, and inconsistent error handling.
+
+Developers should not need to become printer-protocol experts to ship a reliable application.
+
+AI coding agents should not need to guess what a printer supports from a brand name or copy undocumented raw bytes from old examples.
+
+OpenReceipt aims to provide one clear application-facing model while keeping device-specific concerns modular internally.
 
 ## Design principles
 
-- simple common path, powerful lower layers
+- Simple common path, powerful lower layers
 - TypeScript-first and AI-agent-friendly
-- receipt intent separate from printer encoding and transport
-- capability-driven instead of brand-driven application code
-- sensible defaults with explicit overrides
-- structured, actionable errors
-- graceful fallbacks only where behavior is safe and predictable
-- hardware-free development and testing
-- Arabic and RTL treated as first-class requirements
-- evidence-based hardware compatibility claims
+- Domain-agnostic print intent
+- Content-language-agnostic text pipeline
+- Document/layout separate from encoding and transport
+- Capability-driven instead of brand-driven application code
+- Protocol and transport adapters behind stable core contracts
+- Sensible defaults with explicit overrides
+- Structured, actionable errors
+- Graceful, observable fallbacks where safe
+- Hardware-free development and testing
+- Evidence-based compatibility claims
 
-## V1 direction
+## API direction
 
-V1 is deliberately focused on ESC/POS receipt printers with Node.js / TypeScript:
-
-- receipt document and layout model
-- 58 mm and 80 mm layouts
-- text, alignment, columns, wrapping, totals, and separators
-- TCP transport first
-- USB transport where practical
-- QR codes and barcodes
-- images / logos
-- cut and cash-drawer actions
-- Arabic / RTL with a documented fallback strategy
-- mock / preview support
-- clear diagnostics and structured errors
-
-These are goals for V1, not claims that every item is implemented today.
-
-## Current API foundation
-
-The first implemented layer is a hardware-independent receipt document builder:
-
-```ts
-import { receipt } from "openreceipt";
-
-const document = receipt()
-  .title("My Store")
-  .item("Coffee", 2, 30)
-  .divider()
-  .total("TOTAL", 60)
-  .feed()
-  .cut()
-  .toDocument();
-```
-
-The receipt document is intentionally separate from layout, ESC/POS encoding, printer profiles, and transport.
-
-## Target printing experience
-
-The intended high-level experience is:
+The public API is still being designed. The target experience is intentionally straightforward:
 
 ```ts
 import { createPrinter, receipt, tcp } from "openreceipt";
@@ -95,78 +89,65 @@ await printer.print(
   receipt()
     .title("My Store")
     .item("Coffee", 2, 30)
-    .total("TOTAL", 60)
+    .total(60)
     .cut(),
 );
 ```
 
-`createPrinter()` and `tcp()` above describe the target API direction and are **not part of the current public implementation yet**.
+The code above documents the desired developer experience, not a stable released API yet.
 
-## Architecture
+## Architecture direction
 
 ```text
-Application / AI-generated code
+Application / AI coding agent
             ↓
-       Receipt API
+       Print intent API
             ↓
-    Receipt document
+       Print document
             ↓
-      Layout engine
+        Layout engine
             ↓
-     Printer profile
+      Device profile
             ↓
-      ESC/POS encoder
+      Protocol encoder
             ↓
-   Transport abstraction
+        Transport
             ↓
-      Thermal printer
+       Output device
 ```
 
-Changing printer hardware or connection type should not require rewriting receipt business logic.
+Changing a printer, protocol, or connection should not require rewriting application business logic when the requested print intent is still supported.
 
-See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the architectural boundaries.
+## For AI coding agents
 
-## AI coding agents
+Public APIs should be understandable from types and documentation without reverse-engineering implementation details.
 
-OpenReceipt treats AI-agent usability as part of API design, not an afterthought. Public APIs should expose enough information through types and documentation for a coding agent to understand:
+Important contracts should expose:
 
 - purpose
-- accepted input
-- defaults
-- output
+- inputs and defaults
+- capabilities
+- expected outputs
 - structured errors
-- required capabilities
+- remediation hints where practical
 - fallback behavior
-- important edge cases
+- edge cases
+- hardware-independent vs device-specific boundaries
 
-Repository-level instructions live in [`AGENTS.md`](AGENTS.md).
+Machine-readable capability/profile data is preferred over prose-only brand compatibility rules.
 
-## Compatibility
+## Compatibility policy
 
-Do not infer compatibility from a printer brand or the phrase "ESC/POS compatible" alone. Printer firmware and command support vary.
+OpenReceipt does not claim that every printer labeled `ESC/POS compatible` supports every feature.
 
-As hardware support lands, compatibility claims will identify exact models and evidence wherever practical. Untested behavior should be described as unverified rather than supported.
+Compatibility should be based on tested capabilities and documented device/profile evidence. Unsupported behavior should fail explicitly or use a documented safe fallback rather than silently corrupting output.
 
 ## Contributing
 
-Contributions and hardware reports are welcome. Please read [`CONTRIBUTING.md`](CONTRIBUTING.md) before opening a pull request.
+See `CONTRIBUTING.md` before opening a pull request. Public API changes should preserve the architecture boundaries and include tests that demonstrate their contract.
 
-For bugs, include a minimal sanitized reproduction plus the exact runtime, transport, and printer model when relevant.
-
-## Security
-
-Do **not** disclose vulnerabilities or exploit details in public issues. Follow [`SECURITY.md`](SECURITY.md) for private reporting guidance.
-
-Never attach real customer receipts, credentials, tokens, or sensitive printer/network data to public bug reports.
-
-## Support
-
-See [`SUPPORT.md`](SUPPORT.md) for supported project boundaries and the information needed for useful hardware reports.
-
-## Public release discipline
-
-OpenReceipt will be developed publicly, but releases should only make claims backed by implementation and testing. The repository maintains a [`public release checklist`](docs/PUBLIC_RELEASE_CHECKLIST.md) covering secrets, npm packaging, compatibility evidence, security, developer experience, and AI-agent usability.
+Security-sensitive reports should follow `SECURITY.md` rather than being disclosed publicly first.
 
 ## License
 
-MIT. See [`LICENSE`](LICENSE).
+MIT.
