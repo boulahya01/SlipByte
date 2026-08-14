@@ -139,3 +139,34 @@ test("rejects unsafe custom paper profiles", () => {
       error.code === "INVALID_PAPER_PROFILE",
   );
 });
+
+test("rejects unknown built-in paper names from plain JavaScript", () => {
+  assert.throws(
+    () => paperProfile("72mm"),
+    (error) =>
+      error instanceof OpenReceiptError &&
+      error.code === "INVALID_PAPER_PROFILE",
+  );
+});
+
+test("rejects invalid overflow values instead of guessing", () => {
+  const document = receipt().text("Hello").toDocument();
+
+  assert.throws(
+    () => layoutReceipt(document, { overflow: "clip-somehow" }),
+    (error) =>
+      error instanceof OpenReceiptError &&
+      error.code === "INVALID_LAYOUT_OPTION",
+  );
+});
+
+test("rejects amount formatters that return invalid output", () => {
+  const document = receipt().total("TOTAL", 10).toDocument();
+
+  assert.throws(
+    () => layoutReceipt(document, { formatAmount: () => undefined }),
+    (error) =>
+      error instanceof OpenReceiptError &&
+      error.code === "AMOUNT_FORMAT_FAILED",
+  );
+});
