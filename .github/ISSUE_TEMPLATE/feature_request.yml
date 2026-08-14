@@ -1,0 +1,54 @@
+name: Feature request
+description: Propose a focused improvement to OpenReceipt
+title: "[Feature]: "
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        OpenReceipt favors small, composable improvements that make thermal printing easier without collapsing receipt, protocol, profile, and transport layers together.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Developer problem
+      description: What is difficult today? Describe the workflow before proposing the API.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed developer experience
+      description: Show the API or workflow you would like developers and coding agents to use.
+      render: typescript
+  - type: dropdown
+    id: layer
+    attributes:
+      label: Main layer
+      options:
+        - Receipt API
+        - Layout
+        - Printer profile / capabilities
+        - ESC/POS encoding
+        - Transport
+        - Mock / preview
+        - Diagnostics / errors
+        - Documentation / AI-agent usability
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: hardware
+    attributes:
+      label: Hardware evidence
+      description: If this is printer-specific, list exact models, firmware, documentation, or test evidence. Leave empty when not applicable.
+  - type: checkboxes
+    id: principles
+    attributes:
+      label: Project principles
+      options:
+        - label: This keeps the common developer path simple.
+          required: true
+        - label: This does not require application code to depend on printer-brand conditions unnecessarily.
+          required: true
+        - label: I am not claiming untested universal hardware compatibility.
+          required: true
