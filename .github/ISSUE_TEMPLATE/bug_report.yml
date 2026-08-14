@@ -1,0 +1,72 @@
+name: Bug report
+description: Report a reproducible OpenReceipt problem
+title: "[Bug]: "
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve OpenReceipt. Do not include credentials, private customer receipts, tokens, or security exploit details here. Use the security reporting process for vulnerabilities.
+  - type: input
+    id: version
+    attributes:
+      label: OpenReceipt version or commit
+      placeholder: 0.x.x or commit SHA
+    validations:
+      required: true
+  - type: input
+    id: runtime
+    attributes:
+      label: Runtime
+      description: Node.js version and operating system
+      placeholder: Node 20.x, Windows 11
+    validations:
+      required: true
+  - type: input
+    id: printer
+    attributes:
+      label: Printer
+      description: Exact manufacturer/model and firmware when known
+      placeholder: Epson TM-T20III, firmware ...
+  - type: dropdown
+    id: transport
+    attributes:
+      label: Transport
+      options:
+        - TCP
+        - USB
+        - Serial
+        - OS print queue
+        - Mock / preview
+        - Not sure
+        - Other
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal reproduction
+      description: Smallest sanitized example that reproduces the issue
+      render: typescript
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: Include structured OpenReceipt error codes and sanitized diagnostics when available
+    validations:
+      required: true
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: I removed secrets, customer data, tokens, and sensitive printer/network information.
+          required: true
+        - label: This is not a security vulnerability requiring private disclosure.
+          required: true
