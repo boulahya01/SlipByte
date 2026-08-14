@@ -14,6 +14,11 @@ export type PaperProfile = Readonly<{
   columns: number;
 }>;
 
+export type TextMeasurer = Readonly<{
+  id?: string;
+  measure: (text: string) => number;
+}>;
+
 export type LayoutLineSource = "text" | "item" | "total" | "divider";
 
 export type LayoutLineNode = Readonly<{
@@ -46,6 +51,7 @@ export type LayoutOptions = Readonly<{
   paper?: BuiltInPaperSize | PaperProfile;
   overflow?: LayoutOverflow;
   formatAmount?: (amount: number) => string;
+  textMeasurer?: TextMeasurer;
 }>;
 
 export const PAPER_58MM: PaperProfile = Object.freeze({
@@ -58,6 +64,17 @@ export const PAPER_80MM: PaperProfile = Object.freeze({
   id: "80mm",
   widthMm: 80,
   columns: 48,
+});
+
+const graphemeSegmenter = new Intl.Segmenter(undefined, {
+  granularity: "grapheme",
+});
+
+export const GRAPHEME_TEXT_MEASURER: TextMeasurer = Object.freeze({
+  id: "grapheme-cluster",
+  measure(text: string): number {
+    return segmentGraphemes(text).length;
+  },
 });
 
 export function paperProfile(size: BuiltInPaperSize): PaperProfile {
@@ -83,6 +100,9 @@ export function layoutReceipt(
   const paper = resolvePaper(options.paper ?? "80mm");
   const overflow = resolveOverflow(options.overflow ?? "wrap");
   const formatAmount = options.formatAmount ?? defaultAmountFormatter;
+  const textMeasurer = resolveTextMeasurer(
+    options.textMeasurer ?? GRAPHEME_TEXT_MEASURER,
+  );
 
   if (typeof formatAmount !== "function") {
     throw new OpenReceiptError(
@@ -102,6 +122,7 @@ export function layoutReceipt(
         paper.columns,
         overflow,
         formatAmount,
+        textMeasurer,
       ),
     );
   });
@@ -118,17 +139,23 @@ function layoutNode(
   columns: number,
   overflow: LayoutOverflow,
   formatAmount: (amount: number) => string,
+  textMeasurer: TextMeasurer,
 ): LayoutNode[] {
   switch (node.type) {
     case "text":
-      return fitText(node.value, columns, overflow, sourceNodeIndex).map(
-        (value) =>
-          makeLine(
-            align(value, columns, node.align),
-            node.bold,
-            "text",
-            sourceNodeIndex,
-          ),
+      return fitText(
+        node.value,
+        columns,
+        overflow,
+        sourceNodeIndex,
+        textMeasurer,
+      ).map((value) =>
+        makeLine(
+          align(value, columns, node.align, textMeasurer),
+          node.bold,
+          "text",
+          sourceNodeIndex,
+        ),
       );
 
     case "item": {
@@ -141,6 +168,7 @@ function layoutNode(
         overflow,
         "item",
         sourceNodeIndex,
+        textMeasurer,
       );
     }
 
@@ -152,6 +180,7 @@ function layoutNode(
         overflow,
         "total",
         sourceNodeIndex,
+        textMeasurer,
       );
 
     case "divider":
@@ -209,6 +238,35 @@ function resolveOverflow(value: LayoutOverflow): LayoutOverflow {
   );
 }
 
+function resolveTextMeasurer(measurer: TextMeasurer): TextMeasurer {
+  const candidate = measurer as Partial<TextMeasurer> | null;
+
+  if (
+    candidate === null ||
+    typeof candidate !== "object" ||
+    typeof candidate.measure !== "function"
+  ) {
+    throw new OpenReceiptError(
+      "INVALID_LAYOUT_OPTION",
+      "textMeasurer must expose a measure(text) function.",
+      { textMeasurerType: typeof measurer },
+    );
+  }
+
+  const resolved = candidate as TextMeasurer;
+  const spaceWidth = measureText(" ", resolved);
+
+  if (spaceWidth !== 1) {
+    throw new OpenReceiptError(
+      "INVALID_LAYOUT_OPTION",
+      "Column-based text measurers must report one layout cell for a normal space.",
+      { textMeasurerId: resolved.id, spaceWidth },
+    );
+  }
+
+  return resolved;
+}
+
 function defaultAmountFormatter(amount: number): string {
   return amount.toFixed(2);
 }
@@ -247,17 +305,28 @@ function layoutColumns(
   overflow: LayoutOverflow,
   source: "item" | "total",
   sourceNodeIndex: number,
+  textMeasurer: TextMeasurer,
 ): LayoutLineNode[] {
-  const rightWidth = cellLength(right);
+  const rightWidth = measureText(right, textMeasurer);
 
   if (rightWidth >= columns) {
     if (overflow === "error") {
-      throw overflowError(right, columns, sourceNodeIndex);
+      throw overflowError(right, columns, sourceNodeIndex, textMeasurer);
     }
 
     if (overflow === "truncate") {
-      const leftLine = truncate(left, columns);
-      const rightLine = align(truncate(right, columns), columns, "right");
+      const leftLine = truncate(
+        left,
+        columns,
+        sourceNodeIndex,
+        textMeasurer,
+      );
+      const rightLine = align(
+        truncate(right, columns, sourceNodeIndex, textMeasurer),
+        columns,
+        "right",
+        textMeasurer,
+      );
       return [
         makeLine(leftLine, false, source, sourceNodeIndex),
         makeLine(rightLine, false, source, sourceNodeIndex),
@@ -265,19 +334,40 @@ function layoutColumns(
     }
 
     return [
-      ...fitText(left, columns, "wrap", sourceNodeIndex).map((value) =>
-        makeLine(value, false, source, sourceNodeIndex),
-      ),
-      ...fitText(right, columns, "wrap", sourceNodeIndex).map((value) =>
-        makeLine(align(value, columns, "right"), false, source, sourceNodeIndex),
+      ...fitText(
+        left,
+        columns,
+        "wrap",
+        sourceNodeIndex,
+        textMeasurer,
+      ).map((value) => makeLine(value, false, source, sourceNodeIndex)),
+      ...fitText(
+        right,
+        columns,
+        "wrap",
+        sourceNodeIndex,
+        textMeasurer,
+      ).map((value) =>
+        makeLine(
+          align(value, columns, "right", textMeasurer),
+          false,
+          source,
+          sourceNodeIndex,
+        ),
       ),
     ];
   }
 
   const leftColumns = columns - rightWidth - 1;
-  const leftLines = fitText(left, leftColumns, overflow, sourceNodeIndex);
+  const leftLines = fitText(
+    left,
+    leftColumns,
+    overflow,
+    sourceNodeIndex,
+    textMeasurer,
+  );
   const firstLeft = leftLines[0] ?? "";
-  const firstValue = `${padEnd(firstLeft, leftColumns)} ${right}`;
+  const firstValue = `${padEnd(firstLeft, leftColumns, textMeasurer)} ${right}`;
 
   return [
     makeLine(firstValue, false, source, sourceNodeIndex),
@@ -292,32 +382,42 @@ function fitText(
   columns: number,
   overflow: LayoutOverflow,
   sourceNodeIndex: number,
+  textMeasurer: TextMeasurer,
 ): string[] {
   const paragraphs = value.replaceAll("\r\n", "\n").split("\n");
   const lines: string[] = [];
 
   for (const paragraph of paragraphs) {
-    if (cellLength(paragraph) <= columns) {
+    if (measureText(paragraph, textMeasurer) <= columns) {
       lines.push(paragraph);
       continue;
     }
 
     if (overflow === "error") {
-      throw overflowError(paragraph, columns, sourceNodeIndex);
+      throw overflowError(paragraph, columns, sourceNodeIndex, textMeasurer);
     }
 
     if (overflow === "truncate") {
-      lines.push(truncate(paragraph, columns));
+      lines.push(
+        truncate(paragraph, columns, sourceNodeIndex, textMeasurer),
+      );
       continue;
     }
 
-    lines.push(...wrap(paragraph, columns));
+    lines.push(
+      ...wrap(paragraph, columns, sourceNodeIndex, textMeasurer),
+    );
   }
 
   return lines;
 }
 
-function wrap(value: string, columns: number): string[] {
+function wrap(
+  value: string,
+  columns: number,
+  sourceNodeIndex: number,
+  textMeasurer: TextMeasurer,
+): string[] {
   const words = value.trim().split(/\s+/u).filter(Boolean);
   if (words.length === 0) {
     return [""];
@@ -327,20 +427,25 @@ function wrap(value: string, columns: number): string[] {
   let current = "";
 
   for (const word of words) {
-    if (cellLength(word) > columns) {
+    if (measureText(word, textMeasurer) > columns) {
       if (current) {
         lines.push(current);
         current = "";
       }
 
-      const chunks = chunk(word, columns);
+      const chunks = chunk(
+        word,
+        columns,
+        sourceNodeIndex,
+        textMeasurer,
+      );
       lines.push(...chunks.slice(0, -1));
       current = chunks.at(-1) ?? "";
       continue;
     }
 
     const candidate = current ? `${current} ${word}` : word;
-    if (cellLength(candidate) <= columns) {
+    if (measureText(candidate, textMeasurer) <= columns) {
       current = candidate;
     } else {
       lines.push(current);
@@ -355,31 +460,78 @@ function wrap(value: string, columns: number): string[] {
   return lines;
 }
 
-function chunk(value: string, columns: number): string[] {
-  const cells = Array.from(value);
+function chunk(
+  value: string,
+  columns: number,
+  sourceNodeIndex: number,
+  textMeasurer: TextMeasurer,
+): string[] {
+  const segments = segmentGraphemes(value);
   const chunks: string[] = [];
+  let current = "";
 
-  for (let index = 0; index < cells.length; index += columns) {
-    chunks.push(cells.slice(index, index + columns).join(""));
+  for (const segment of segments) {
+    const candidate = `${current}${segment}`;
+
+    if (measureText(candidate, textMeasurer) <= columns) {
+      current = candidate;
+      continue;
+    }
+
+    if (!current) {
+      throw overflowError(segment, columns, sourceNodeIndex, textMeasurer);
+    }
+
+    chunks.push(current);
+    current = segment;
+
+    if (measureText(current, textMeasurer) > columns) {
+      throw overflowError(current, columns, sourceNodeIndex, textMeasurer);
+    }
+  }
+
+  if (current) {
+    chunks.push(current);
   }
 
   return chunks;
 }
 
-function truncate(value: string, columns: number): string {
-  if (cellLength(value) <= columns) {
+function truncate(
+  value: string,
+  columns: number,
+  sourceNodeIndex: number,
+  textMeasurer: TextMeasurer,
+): string {
+  if (measureText(value, textMeasurer) <= columns) {
     return value;
   }
 
-  if (columns === 1) {
-    return "…";
+  const ellipsis = "…";
+  if (measureText(ellipsis, textMeasurer) > columns) {
+    throw overflowError(ellipsis, columns, sourceNodeIndex, textMeasurer);
   }
 
-  return `${Array.from(value).slice(0, columns - 1).join("")}…`;
+  let result = "";
+
+  for (const segment of segmentGraphemes(value)) {
+    const candidate = `${result}${segment}${ellipsis}`;
+    if (measureText(candidate, textMeasurer) > columns) {
+      break;
+    }
+    result += segment;
+  }
+
+  return `${result}${ellipsis}`;
 }
 
-function align(value: string, columns: number, alignment: Alignment): string {
-  const width = cellLength(value);
+function align(
+  value: string,
+  columns: number,
+  alignment: Alignment,
+  textMeasurer: TextMeasurer,
+): string {
+  const width = measureText(value, textMeasurer);
   if (width >= columns || alignment === "left") {
     return value;
   }
@@ -389,12 +541,46 @@ function align(value: string, columns: number, alignment: Alignment): string {
   return `${" ".repeat(leading)}${value}`;
 }
 
-function padEnd(value: string, columns: number): string {
-  return `${value}${" ".repeat(Math.max(0, columns - cellLength(value)))}`;
+function padEnd(
+  value: string,
+  columns: number,
+  textMeasurer: TextMeasurer,
+): string {
+  const width = measureText(value, textMeasurer);
+  return `${value}${" ".repeat(Math.max(0, columns - width))}`;
 }
 
-function cellLength(value: string): number {
-  return Array.from(value).length;
+function measureText(value: string, textMeasurer: TextMeasurer): number {
+  let measured: unknown;
+
+  try {
+    measured = textMeasurer.measure(value);
+  } catch (cause) {
+    throw new OpenReceiptError(
+      "TEXT_MEASURE_FAILED",
+      "The configured text measurer threw while measuring receipt content.",
+      { textMeasurerId: textMeasurer.id, cause },
+    );
+  }
+
+  if (
+    typeof measured !== "number" ||
+    !Number.isFinite(measured) ||
+    !Number.isInteger(measured) ||
+    measured < 0
+  ) {
+    throw new OpenReceiptError(
+      "TEXT_MEASURE_FAILED",
+      "Text measurers must return a finite non-negative integer number of layout cells.",
+      { textMeasurerId: textMeasurer.id, measured },
+    );
+  }
+
+  return measured;
+}
+
+function segmentGraphemes(value: string): string[] {
+  return Array.from(graphemeSegmenter.segment(value), ({ segment }) => segment);
 }
 
 function makeLine(
@@ -410,6 +596,7 @@ function overflowError(
   value: string,
   columns: number,
   sourceNodeIndex: number,
+  textMeasurer: TextMeasurer,
 ): OpenReceiptError {
   return new OpenReceiptError(
     "LAYOUT_OVERFLOW",
@@ -418,7 +605,8 @@ function overflowError(
       value,
       columns,
       sourceNodeIndex,
-      measuredColumns: cellLength(value),
+      measuredColumns: measureText(value, textMeasurer),
+      textMeasurerId: textMeasurer.id,
     },
   );
 }
