@@ -1,0 +1,11 @@
+name: Actions Probe
+
+on:
+  pull_request:
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Confirm runner startup
+        run: echo "GitHub Actions runner started successfully"
