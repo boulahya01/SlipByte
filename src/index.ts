@@ -1,6 +1,24 @@
 export { OpenReceiptError } from "./errors.js";
 export type { OpenReceiptErrorCode } from "./errors.js";
 export {
+  createPrintDocument,
+  deserializePrintDocument,
+  parsePrintDocument,
+  PRINT_DOCUMENT_VERSION,
+  serializePrintDocument,
+} from "./document.js";
+export type {
+  PrintCutNodeV1,
+  PrintDividerNodeV1,
+  PrintDocument,
+  PrintDocumentNodeV1,
+  PrintDocumentV1,
+  PrintFeedNodeV1,
+  PrintItemNodeV1,
+  PrintTextNodeV1,
+  PrintTotalNodeV1,
+} from "./document.js";
+export {
   GRAPHEME_TEXT_MEASURER,
   layoutReceipt,
   PAPER_58MM,
