@@ -1,11 +1,43 @@
 import { OpenReceiptError } from "./errors.js";
-import type { Alignment, ReceiptDocument, ReceiptNode } from "./types.js";
+import type { Alignment, ReceiptDocument } from "./types.js";
 
 export const PRINT_DOCUMENT_VERSION = 1 as const;
 
+export type PrintTextNodeV1 = Readonly<{
+  type: "text";
+  value: string;
+  align: Alignment;
+  bold: boolean;
+}>;
+
+export type PrintItemNodeV1 = Readonly<{
+  type: "item";
+  name: string;
+  quantity: number;
+  unitPrice: number;
+}>;
+
+export type PrintTotalNodeV1 = Readonly<{
+  type: "total";
+  label: string;
+  amount: number;
+}>;
+
+export type PrintDividerNodeV1 = Readonly<{ type: "divider" }>;
+export type PrintFeedNodeV1 = Readonly<{ type: "feed"; lines: number }>;
+export type PrintCutNodeV1 = Readonly<{ type: "cut" }>;
+
+export type PrintDocumentNodeV1 =
+  | PrintTextNodeV1
+  | PrintItemNodeV1
+  | PrintTotalNodeV1
+  | PrintDividerNodeV1
+  | PrintFeedNodeV1
+  | PrintCutNodeV1;
+
 export type PrintDocumentV1 = Readonly<{
   version: typeof PRINT_DOCUMENT_VERSION;
-  nodes: readonly ReceiptNode[];
+  nodes: readonly PrintDocumentNodeV1[];
 }>;
 
 export type PrintDocument = PrintDocumentV1;
@@ -59,7 +91,7 @@ export function deserializePrintDocument(serialized: string): PrintDocumentV1 {
   return parsePrintDocument(value);
 }
 
-function parseNode(value: unknown, index: number): ReceiptNode {
+function parseNode(value: unknown, index: number): PrintDocumentNodeV1 {
   if (!isRecord(value) || typeof value.type !== "string") {
     throw invalidDocument("Print document node must be an object with a type.", { index });
   }
