@@ -2,7 +2,9 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
-  DEFAULT_TCP_TIMEOUT_MS,
+  DEFAULT_TCP_CLOSE_TIMEOUT_MS,
+  DEFAULT_TCP_CONNECT_TIMEOUT_MS,
+  DEFAULT_TCP_WRITE_TIMEOUT_MS,
   OpenReceiptError,
   sendTcp,
 } from "../dist/index.js";
@@ -30,7 +32,9 @@ test("sends bytes through an injected TCP connection and closes it", async () =>
   assert.deepEqual(receivedEndpoint, {
     host: "printer.local",
     port: 9100,
-    timeoutMs: DEFAULT_TCP_TIMEOUT_MS,
+    connectTimeoutMs: DEFAULT_TCP_CONNECT_TIMEOUT_MS,
+    writeTimeoutMs: DEFAULT_TCP_WRITE_TIMEOUT_MS,
+    closeTimeoutMs: DEFAULT_TCP_CLOSE_TIMEOUT_MS,
   });
   assert.deepEqual(events, [
     ["write", [0x1b, 0x40, 0x0a]],
@@ -47,16 +51,20 @@ test("does not assume a default printer port", async () => {
   );
 });
 
-test("validates port and timeout before connecting", async () => {
-  await assert.rejects(
-    () => sendTcp(new Uint8Array(), { host: "printer.local", port: 0 }),
-    (error) => error instanceof OpenReceiptError && error.code === "INVALID_TCP_OPTION",
-  );
-
-  await assert.rejects(
-    () => sendTcp(new Uint8Array(), { host: "printer.local", port: 9100, timeoutMs: 0 }),
-    (error) => error instanceof OpenReceiptError && error.code === "INVALID_TCP_OPTION",
-  );
+test("validates stage timeout options before connecting", async () => {
+  for (const options of [
+    { host: "printer.local", port: 0 },
+    { host: "printer.local", port: 9100, connectTimeoutMs: 0 },
+    { host: "printer.local", port: 9100, writeTimeoutMs: 0 },
+    { host: "printer.local", port: 9100, closeTimeoutMs: 0 },
+  ]) {
+    await assert.rejects(
+      () => sendTcp(new Uint8Array(), options),
+      (error) =>
+        error instanceof OpenReceiptError &&
+        error.code === "INVALID_TCP_OPTION",
+    );
+  }
 });
 
 test("wraps connector failures without copying arbitrary failure payloads", async () => {
@@ -72,6 +80,19 @@ test("wraps connector failures without copying arbitrary failure payloads", asyn
       error instanceof OpenReceiptError &&
       error.code === "TCP_CONNECT_FAILED" &&
       !("cause" in error.details),
+  );
+});
+
+test("times out a hanging injected connector", async () => {
+  await assert.rejects(
+    () => sendTcp(
+      Uint8Array.from([1]),
+      { host: "printer.local", port: 9100, connectTimeoutMs: 5 },
+      async () => new Promise(() => {}),
+    ),
+    (error) =>
+      error instanceof OpenReceiptError &&
+      error.code === "TCP_CONNECT_TIMEOUT",
   );
 });
 
@@ -97,7 +118,63 @@ test("attempts to close after a failed write and preserves the write failure", a
   assert.equal(closed, true);
 });
 
-test("preserves structured timeout failures from an injected connector", async () => {
+test("times out a hanging write, aborts, then still attempts close", async () => {
+  const events = [];
+
+  await assert.rejects(
+    () => sendTcp(
+      Uint8Array.from([1]),
+      { host: "printer.local", port: 9100, writeTimeoutMs: 5 },
+      async () => ({
+        async write() {
+          events.push("write");
+          return new Promise(() => {});
+        },
+        async close() {
+          events.push("close");
+        },
+        abort() {
+          events.push("abort");
+        },
+      }),
+    ),
+    (error) =>
+      error instanceof OpenReceiptError &&
+      error.code === "TCP_WRITE_TIMEOUT",
+  );
+
+  assert.deepEqual(events, ["write", "abort", "close"]);
+});
+
+test("reports close timeout separately and aborts the connection", async () => {
+  const events = [];
+
+  await assert.rejects(
+    () => sendTcp(
+      Uint8Array.from([1]),
+      { host: "printer.local", port: 9100, closeTimeoutMs: 5 },
+      async () => ({
+        async write() {
+          events.push("write");
+        },
+        async close() {
+          events.push("close");
+          return new Promise(() => {});
+        },
+        abort() {
+          events.push("abort");
+        },
+      }),
+    ),
+    (error) =>
+      error instanceof OpenReceiptError &&
+      error.code === "TCP_CLOSE_TIMEOUT",
+  );
+
+  assert.deepEqual(events, ["write", "close", "abort"]);
+});
+
+test("preserves structured failures from an injected connector", async () => {
   await assert.rejects(
     () => sendTcp(
       Uint8Array.from([1]),
@@ -106,6 +183,8 @@ test("preserves structured timeout failures from an injected connector", async (
         throw new OpenReceiptError("TCP_CONNECT_TIMEOUT", "fixture timeout");
       },
     ),
-    (error) => error instanceof OpenReceiptError && error.code === "TCP_CONNECT_TIMEOUT",
+    (error) =>
+      error instanceof OpenReceiptError &&
+      error.code === "TCP_CONNECT_TIMEOUT",
   );
 });
