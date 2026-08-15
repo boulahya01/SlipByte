@@ -14,7 +14,13 @@ export type OpenReceiptErrorCode =
   | "UNSUPPORTED_CAPABILITY"
   | "UNSUPPORTED_PROTOCOL"
   | "INVALID_ENCODER_OPTION"
-  | "TEXT_ENCODING_FAILED";
+  | "TEXT_ENCODING_FAILED"
+  | "INVALID_TCP_OPTION"
+  | "TCP_CONNECT_FAILED"
+  | "TCP_CONNECT_TIMEOUT"
+  | "TCP_WRITE_FAILED"
+  | "TCP_WRITE_TIMEOUT"
+  | "TCP_CLOSE_FAILED";
 
 export class OpenReceiptError extends Error {
   readonly code: OpenReceiptErrorCode;
