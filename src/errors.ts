@@ -9,7 +9,9 @@ export type OpenReceiptErrorCode =
   | "INVALID_LAYOUT_OPTION"
   | "AMOUNT_FORMAT_FAILED"
   | "TEXT_MEASURE_FAILED"
-  | "LAYOUT_OVERFLOW";
+  | "LAYOUT_OVERFLOW"
+  | "INVALID_DEVICE_PROFILE"
+  | "UNSUPPORTED_CAPABILITY";
 
 export class OpenReceiptError extends Error {
   readonly code: OpenReceiptErrorCode;
