@@ -1,6 +1,18 @@
 export { OpenReceiptError } from "./errors.js";
 export type { OpenReceiptErrorCode } from "./errors.js";
 export {
+  defineDeviceProfile,
+  requireCapability,
+  resolveCapability,
+} from "./capabilities.js";
+export type {
+  CapabilityResolution,
+  CapabilitySupport,
+  DeviceProfile,
+  PrinterCapabilities,
+  PrinterCapability,
+} from "./capabilities.js";
+export {
   createPrintDocument,
   deserializePrintDocument,
   parsePrintDocument,
@@ -18,6 +30,15 @@ export type {
   PrintTextNodeV1,
   PrintTotalNodeV1,
 } from "./document.js";
+export {
+  ESC_POS_ASCII_TEXT_ENCODER,
+  encodeEscPos,
+} from "./escpos.js";
+export type {
+  EscPosCutFallback,
+  EscPosEncoderOptions,
+  EscPosTextEncoder,
+} from "./escpos.js";
 export {
   GRAPHEME_TEXT_MEASURER,
   layoutReceipt,
