@@ -20,7 +20,9 @@ export type OpenReceiptErrorCode =
   | "TCP_CONNECT_TIMEOUT"
   | "TCP_WRITE_FAILED"
   | "TCP_WRITE_TIMEOUT"
-  | "TCP_CLOSE_FAILED";
+  | "TCP_CLOSED_EARLY"
+  | "TCP_CLOSE_FAILED"
+  | "TCP_CLOSE_TIMEOUT";
 
 export class OpenReceiptError extends Error {
   readonly code: OpenReceiptErrorCode;
