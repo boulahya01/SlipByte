@@ -20,6 +20,7 @@ OpenReceipt is in early development. The repository is intended to be developed 
 
 - TypeScript-first receipt/print document foundation
 - chainable receipt builder
+- stable versioned `PrintDocumentV1` JSON-compatible contract
 - deterministic hardware-independent layout engine
 - 58 mm / 32-column and 80 mm / 48-column convenience profiles
 - custom validated paper profiles
@@ -27,24 +28,26 @@ OpenReceipt is in early development. The repository is intended to be developed 
 - grapheme-aware default text measurement with an injectable device-width model
 - initial device profile and capability model
 - explicit `native`, `fallback`, and `unsupported` capability states
+- capability-aware ESC/POS byte encoder with deterministic fixtures
+- strict default ASCII encoding plus injectable device-specific text encoders
+- raw TCP transport with explicit endpoint configuration, stage-specific timeouts, safe close/abort behavior, and no blind retries
 - structured OpenReceipt errors
 - input validation and unsafe control-character rejection in normal text fields
 - public contribution, security, support, and maintainer policies
 
 ### Active work
 
-- versioned print-document/schema contract
+- mock printer and hardware-free preview workflow
 - capability/profile contract hardening before broad compatibility data is added
-- ESC/POS encoder design and deterministic byte fixtures
+- diagnostics and end-to-end failure semantics
 
 ### Planned v0.1 path
 
-- TCP transport
 - practical USB transport
-- mock printer / preview workflow
-- structured diagnostics and transport/device errors
+- structured diagnostics across protocol, transport, and device feedback
 - QR codes, barcodes, images, cut, and cash-drawer handling through explicit capabilities
 - compatibility fixtures and evidence-based device profiles
+- arbitrary Unicode native/raster fallback strategy
 - CI/release hardening
 - real physical-printer validation
 - first npm release
@@ -85,7 +88,7 @@ See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the layer boundaries.
 
 ## Current API foundation
 
-The implemented foundation includes document construction and layout APIs. The complete printer connection API shown below is still the target developer experience, **not a released API**:
+The implemented lower-level path now covers document construction, layout, ESC/POS encoding, and raw TCP delivery. The complete high-level printer API shown below is still the target developer experience, **not a released API**:
 
 ```ts
 import { createPrinter, receipt, tcp } from "openreceipt";
@@ -164,8 +167,11 @@ GitHub Actions currently has a startup/infrastructure blocker tracked in issue #
 ## Documentation
 
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — architecture boundaries
+- [`docs/PRINT_DOCUMENT.md`](docs/PRINT_DOCUMENT.md) — versioned print-document contract
 - [`docs/LAYOUT.md`](docs/LAYOUT.md) — deterministic layout contract
 - [`docs/CAPABILITIES.md`](docs/CAPABILITIES.md) — current capability/profile model
+- [`docs/ESC_POS.md`](docs/ESC_POS.md) — ESC/POS encoder contract
+- [`docs/TCP.md`](docs/TCP.md) — raw TCP transport contract and failure semantics
 - [`docs/ROADMAP.md`](docs/ROADMAP.md) — v0.1 engineering sequence
 - [`docs/MAINTAINER_GUIDE.md`](docs/MAINTAINER_GUIDE.md) — public engineering standards
 - [`docs/PUBLIC_RELEASE_CHECKLIST.md`](docs/PUBLIC_RELEASE_CHECKLIST.md) — public-development and npm-release gates
