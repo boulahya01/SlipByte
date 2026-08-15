@@ -187,7 +187,7 @@ function encodeText(
     throw new OpenReceiptError(
       "TEXT_ENCODING_FAILED",
       "The configured ESC/POS text encoder failed.",
-      { encoderId: encoder.id, sourceNodeIndex, cause },
+      { encoderId: encoder.id, sourceNodeIndex },
     );
   }
 
