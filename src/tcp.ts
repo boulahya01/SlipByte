@@ -84,11 +84,13 @@ export async function sendTcp(
   }
 
   let primaryError: unknown;
+  let primaryStage: "write" | "close" | undefined;
 
   try {
     await connection.write(data);
   } catch (error) {
     primaryError = error;
+    primaryStage = "write";
   }
 
   try {
@@ -96,11 +98,20 @@ export async function sendTcp(
   } catch (error) {
     if (primaryError === undefined) {
       primaryError = error;
+      primaryStage = "close";
     }
   }
 
   if (primaryError !== undefined) {
     if (primaryError instanceof OpenReceiptError) throw primaryError;
+
+    if (primaryStage === "close") {
+      throw new OpenReceiptError(
+        "TCP_CLOSE_FAILED",
+        "TCP connection failed while closing.",
+        endpointDetails(endpoint),
+      );
+    }
 
     throw new OpenReceiptError(
       "TCP_WRITE_FAILED",
