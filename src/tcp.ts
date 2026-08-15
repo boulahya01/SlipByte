@@ -30,6 +30,8 @@ export const DEFAULT_TCP_CONNECT_TIMEOUT_MS = 5_000;
 export const DEFAULT_TCP_WRITE_TIMEOUT_MS = 5_000;
 export const DEFAULT_TCP_CLOSE_TIMEOUT_MS = 2_000;
 
+const guardLateSocketError = (): void => {};
+
 export const NODE_TCP_CONNECTOR: TcpConnector = async (
   endpoint: TcpEndpoint,
 ): Promise<TcpConnection> => {
@@ -38,7 +40,7 @@ export const NODE_TCP_CONNECTOR: TcpConnector = async (
   return Object.freeze({
     write: (data: Uint8Array) => writeSocket(socket, data, endpoint),
     close: () => closeSocket(socket, endpoint),
-    abort: () => socket.destroy(),
+    abort: () => abortSocket(socket),
   });
 };
 
@@ -249,6 +251,7 @@ async function connectSocket(endpoint: TcpEndpoint): Promise<Socket> {
         socket.destroy();
         reject(error);
       } else {
+        socket.on("error", guardLateSocketError);
         resolve(socket);
       }
     };
@@ -386,7 +389,10 @@ async function closeSocket(
   socket: Socket,
   endpoint: TcpEndpoint,
 ): Promise<void> {
-  if (socket.destroyed) return;
+  if (socket.destroyed) {
+    socket.off("error", guardLateSocketError);
+    return;
+  }
 
   return new Promise<void>((resolve, reject) => {
     let settled = false;
@@ -401,6 +407,10 @@ async function closeSocket(
       if (settled) return;
       settled = true;
       cleanup();
+
+      if (error) socket.destroy();
+      socket.off("error", guardLateSocketError);
+
       if (error) reject(error);
       else resolve();
     };
@@ -443,6 +453,11 @@ async function closeSocket(
       );
     }
   });
+}
+
+function abortSocket(socket: Socket): void {
+  socket.destroy();
+  socket.off("error", guardLateSocketError);
 }
 
 async function withTimeout<T>(
