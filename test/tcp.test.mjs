@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createServer } from "node:net";
 import test from "node:test";
 
 import {
@@ -40,6 +41,43 @@ test("sends bytes through an injected TCP connection and closes it", async () =>
     ["write", [0x1b, 0x40, 0x0a]],
     ["close"],
   ]);
+});
+
+test("sends bytes through the built-in Node TCP connector", async () => {
+  const payload = Uint8Array.from([0x1b, 0x40, 0x41, 0x0a]);
+  const server = createServer();
+
+  const received = new Promise((resolve, reject) => {
+    server.once("connection", (socket) => {
+      socket.once("error", reject);
+      socket.once("data", (chunk) => resolve([...chunk]));
+    });
+  });
+
+  await new Promise((resolve, reject) => {
+    server.once("error", reject);
+    server.listen(0, "127.0.0.1", resolve);
+  });
+
+  try {
+    const address = server.address();
+    assert.ok(address && typeof address === "object");
+
+    await Promise.all([
+      sendTcp(payload, {
+        host: "127.0.0.1",
+        port: address.port,
+        connectTimeoutMs: 1_000,
+        writeTimeoutMs: 1_000,
+        closeTimeoutMs: 1_000,
+      }),
+      received,
+    ]).then(([, bytes]) => {
+      assert.deepEqual(bytes, [...payload]);
+    });
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
 });
 
 test("does not assume a default printer port", async () => {
@@ -183,8 +221,6 @@ test("preserves structured failures from an injected connector", async () => {
         throw new OpenReceiptError("TCP_CONNECT_TIMEOUT", "fixture timeout");
       },
     ),
-    (error) =>
-      error instanceof OpenReceiptError &&
-      error.code === "TCP_CONNECT_TIMEOUT",
+    (error) => error instanceof OpenReceiptError && error.code === "TCP_CONNECT_TIMEOUT",
   );
 });
