@@ -11,7 +11,10 @@ export type OpenReceiptErrorCode =
   | "TEXT_MEASURE_FAILED"
   | "LAYOUT_OVERFLOW"
   | "INVALID_DEVICE_PROFILE"
-  | "UNSUPPORTED_CAPABILITY";
+  | "UNSUPPORTED_CAPABILITY"
+  | "UNSUPPORTED_PROTOCOL"
+  | "INVALID_ENCODER_OPTION"
+  | "TEXT_ENCODING_FAILED";
 
 export class OpenReceiptError extends Error {
   readonly code: OpenReceiptErrorCode;
