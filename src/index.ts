@@ -7,7 +7,17 @@ export {
   PRINT_DOCUMENT_VERSION,
   serializePrintDocument,
 } from "./document.js";
-export type { PrintDocument, PrintDocumentV1 } from "./document.js";
+export type {
+  PrintCutNodeV1,
+  PrintDividerNodeV1,
+  PrintDocument,
+  PrintDocumentNodeV1,
+  PrintDocumentV1,
+  PrintFeedNodeV1,
+  PrintItemNodeV1,
+  PrintTextNodeV1,
+  PrintTotalNodeV1,
+} from "./document.js";
 export {
   GRAPHEME_TEXT_MEASURER,
   layoutReceipt,
