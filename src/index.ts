@@ -71,3 +71,14 @@ export type {
   ReceiptTextNode,
   ReceiptTotalNode,
 } from "./types.js";
+export {
+  DEFAULT_TCP_TIMEOUT_MS,
+  NODE_TCP_CONNECTOR,
+  sendTcp,
+} from "./tcp.js";
+export type {
+  TcpConnection,
+  TcpConnector,
+  TcpEndpoint,
+  TcpTransportOptions,
+} from "./tcp.js";
