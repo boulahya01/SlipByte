@@ -59,6 +59,12 @@ export type {
   PaperProfile,
   TextMeasurer,
 } from "./layout.js";
+export {
+  mockPrint,
+  PREVIEW_CUT_MARKER,
+  previewLayout,
+} from "./preview.js";
+export type { MockPrintResult } from "./preview.js";
 export { ReceiptBuilder, receipt } from "./receipt.js";
 export type {
   Alignment,
