@@ -72,7 +72,9 @@ export type {
   ReceiptTotalNode,
 } from "./types.js";
 export {
-  DEFAULT_TCP_TIMEOUT_MS,
+  DEFAULT_TCP_CLOSE_TIMEOUT_MS,
+  DEFAULT_TCP_CONNECT_TIMEOUT_MS,
+  DEFAULT_TCP_WRITE_TIMEOUT_MS,
   NODE_TCP_CONNECTOR,
   sendTcp,
 } from "./tcp.js";
