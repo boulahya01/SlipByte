@@ -36,6 +36,22 @@ export type {
   TextRepresentationSelection,
 } from "./representation.js";
 export {
+  defineRasterImage,
+  renderTextToRaster,
+} from "./raster.js";
+export type {
+  RasterImage,
+  RasterTextRenderer,
+} from "./raster.js";
+export {
+  ESC_POS_GS_V0_RASTER_ENCODER,
+  encodeEscPosRaster,
+} from "./escpos-raster.js";
+export type {
+  EscPosRasterConfig,
+  EscPosRasterEncoder,
+} from "./escpos-raster.js";
+export {
   createPrintDocument,
   deserializePrintDocument,
   parsePrintDocument,
