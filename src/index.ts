@@ -26,6 +26,16 @@ export type {
   CompatibilityEvidenceSource,
 } from "./compatibility.js";
 export {
+  selectTextRepresentation,
+} from "./representation.js";
+export type {
+  NativeTextRepresentationCandidate,
+  NativeTextRepresentationSelection,
+  RasterTextRepresentationSelection,
+  TextRepresentationOptions,
+  TextRepresentationSelection,
+} from "./representation.js";
+export {
   createPrintDocument,
   deserializePrintDocument,
   parsePrintDocument,
