@@ -1,7 +1,7 @@
 import type { CapabilitySupport, PrinterCapability } from "./capabilities.js";
 import { OpenReceiptError } from "./errors.js";
 
-const UNSAFE_COMPATIBILITY_TEXT = /[\u0000-\u0009\u000B\u000C\u000E-\u001F\u007F]/u;
+const UNSAFE_COMPATIBILITY_TEXT = /[\u0000-\u001F\u007F]/u;
 
 export type CompatibilityEvidenceSource =
   | "hardware-test"
