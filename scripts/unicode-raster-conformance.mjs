@@ -19,6 +19,18 @@ const CASES = Object.freeze([
   { id: "mixed", text: "Order 42 — مرحبا — 世界 — ✅", direction: "ltr" },
 ]);
 
+const POPCOUNT = Object.freeze(
+  Array.from({ length: 256 }, (_, value) => {
+    let count = 0;
+    let remaining = value;
+    while (remaining !== 0) {
+      count += remaining & 1;
+      remaining >>>= 1;
+    }
+    return count;
+  }),
+);
+
 const font = process.env.OPENRECEIPT_UNICODE_FONT?.trim() || DEFAULT_FONT;
 const width = readPositiveIntegerEnv("OPENRECEIPT_UNICODE_WIDTH", DEFAULT_WIDTH);
 const height = readPositiveIntegerEnv("OPENRECEIPT_UNICODE_HEIGHT", DEFAULT_HEIGHT);
@@ -113,15 +125,3 @@ function countInkPixels(data) {
   }
   return total;
 }
-
-const POPCOUNT = Object.freeze(
-  Array.from({ length: 256 }, (_, value) => {
-    let count = 0;
-    let remaining = value;
-    while (remaining !== 0) {
-      count += remaining & 1;
-      remaining >>>= 1;
-    }
-    return count;
-  }),
-);
