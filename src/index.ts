@@ -1,5 +1,12 @@
 export { OpenReceiptError } from "./errors.js";
 export type { OpenReceiptErrorCode } from "./errors.js";
+export { diagnoseError } from "./diagnostics.js";
+export type {
+  DeliveryState,
+  DiagnosticStage,
+  OpenReceiptDiagnostic,
+  RetrySafety,
+} from "./diagnostics.js";
 export {
   defineDeviceProfile,
   requireCapability,
