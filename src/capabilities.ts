@@ -1,5 +1,7 @@
 import { OpenReceiptError } from "./errors.js";
 
+const UNSAFE_IDENTIFIER_TEXT = /[\u0000-\u001F\u007F]/u;
+
 export type CapabilitySupport = "native" | "fallback" | "unsupported";
 
 export type PrinterCapability =
@@ -58,13 +60,36 @@ export function defineDeviceProfile(profile: DeviceProfile): DeviceProfile {
     }
   }
 
-  const textEncodings = profile.textEncodings?.map((encoding) => encoding.trim());
-  if (textEncodings?.some((encoding) => !encoding)) {
-    throw new OpenReceiptError(
-      "INVALID_DEVICE_PROFILE",
-      "textEncodings cannot contain empty values.",
-      { profileId: profile.id },
-    );
+  let textEncodings: readonly string[] | undefined;
+  if (profile.textEncodings !== undefined) {
+    if (!Array.isArray(profile.textEncodings)) {
+      throw new OpenReceiptError(
+        "INVALID_DEVICE_PROFILE",
+        "textEncodings must be an array when provided.",
+        { profileId: profile.id, receivedType: typeof profile.textEncodings },
+      );
+    }
+
+    textEncodings = profile.textEncodings.map((encoding, index) => {
+      if (typeof encoding !== "string") {
+        throw new OpenReceiptError(
+          "INVALID_DEVICE_PROFILE",
+          "textEncodings entries must be text identifiers.",
+          { profileId: profile.id, encodingIndex: index, receivedType: typeof encoding },
+        );
+      }
+
+      const normalized = encoding.trim();
+      if (!normalized || UNSAFE_IDENTIFIER_TEXT.test(normalized)) {
+        throw new OpenReceiptError(
+          "INVALID_DEVICE_PROFILE",
+          "textEncodings entries must be safe non-empty text identifiers.",
+          { profileId: profile.id, encodingIndex: index },
+        );
+      }
+
+      return normalized;
+    });
   }
 
   return Object.freeze({
