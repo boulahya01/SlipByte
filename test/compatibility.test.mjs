@@ -94,3 +94,38 @@ test("rejects malformed evidence without copying arbitrary values into error det
     );
   }
 });
+
+test("rejects unsafe control characters in evidence text without echoing content", () => {
+  for (const evidence of [
+    {
+      profileId: "fixture\u001b-printer",
+      capability: "cut",
+      support: "native",
+      source: "hardware-test",
+      reference: "bench-001",
+    },
+    {
+      profileId: "fixture-printer",
+      capability: "cut",
+      support: "native",
+      source: "hardware-test",
+      reference: "bench\u0000-001",
+    },
+    {
+      profileId: "fixture-printer",
+      capability: "cut",
+      support: "native",
+      source: "hardware-test",
+      reference: "bench-001",
+      notes: ["status\u001b[31m"],
+    },
+  ]) {
+    assert.throws(
+      () => defineCapabilityEvidence(evidence),
+      (error) =>
+        error instanceof OpenReceiptError &&
+        error.code === "INVALID_COMPATIBILITY_EVIDENCE" &&
+        !("value" in error.details),
+    );
+  }
+});
