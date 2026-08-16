@@ -60,18 +60,37 @@ test("treats missing evidence as missing rather than unsupported", () => {
   assert.deepEqual(matches, []);
 });
 
-test("rejects malformed evidence with a stable error code", () => {
+test("validates untrusted collections and query objects", () => {
+  for (const [evidence, query] of [
+    [null, { profileId: "fixture", capability: "cut" }],
+    [{}, { profileId: "fixture", capability: "cut" }],
+    [[], null],
+    [[], ["fixture", "cut"]],
+  ]) {
+    assert.throws(
+      () => findCapabilityEvidence(evidence, query),
+      (error) =>
+        error instanceof OpenReceiptError &&
+        error.code === "INVALID_COMPATIBILITY_EVIDENCE",
+    );
+  }
+});
+
+test("rejects malformed evidence without copying arbitrary values into error details", () => {
+  const secret = { token: "do-not-copy" };
+
   for (const evidence of [
-    { profileId: "fixture", capability: "unknown", support: "native", source: "hardware-test", reference: "r" },
-    { profileId: "fixture", capability: "cut", support: "maybe", source: "hardware-test", reference: "r" },
-    { profileId: "fixture", capability: "cut", support: "native", source: "guess", reference: "r" },
+    { profileId: "fixture", capability: secret, support: "native", source: "hardware-test", reference: "r" },
+    { profileId: "fixture", capability: "cut", support: secret, source: "hardware-test", reference: "r" },
+    { profileId: "fixture", capability: "cut", support: "native", source: secret, reference: "r" },
     { profileId: "fixture", capability: "cut", support: "native", source: "hardware-test", reference: " " },
   ]) {
     assert.throws(
       () => defineCapabilityEvidence(evidence),
       (error) =>
         error instanceof OpenReceiptError &&
-        error.code === "INVALID_COMPATIBILITY_EVIDENCE",
+        error.code === "INVALID_COMPATIBILITY_EVIDENCE" &&
+        !Object.values(error.details).includes(secret),
     );
   }
 });
