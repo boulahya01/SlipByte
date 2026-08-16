@@ -1,6 +1,7 @@
 import { OpenReceiptError } from "./errors.js";
 
 const UNSAFE_IDENTIFIER_TEXT = /[\u0000-\u001F\u007F]/u;
+const UNSAFE_METADATA_TEXT = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/u;
 
 export type CapabilitySupport = "native" | "fallback" | "unsupported";
 
@@ -152,6 +153,15 @@ export function defineDeviceProfile(profile: DeviceProfile): DeviceProfile {
           { profileId: id, noteIndex: index, receivedType: typeof note },
         );
       }
+
+      if (UNSAFE_METADATA_TEXT.test(note)) {
+        throw new OpenReceiptError(
+          "INVALID_DEVICE_PROFILE",
+          "Device profile notes contain an unsafe control character.",
+          { profileId: id, noteIndex: index },
+        );
+      }
+
       return note;
     });
   }
