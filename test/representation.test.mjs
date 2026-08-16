@@ -75,6 +75,37 @@ test("does not probe or select a native candidate omitted from the profile encod
   });
 });
 
+test("rejects malformed profile encoding allowlists before probing candidates", () => {
+  for (const textEncodings of [[42], ["ascii\nspoof"]]) {
+    let probed = false;
+
+    assert.throws(
+      () =>
+        selectTextRepresentation(
+          "secret receipt text",
+          profile({ textEncodings }),
+          {
+            nativeCandidates: [
+              {
+                id: "ascii",
+                canRepresent() {
+                  probed = true;
+                  return true;
+                },
+              },
+            ],
+          },
+        ),
+      (error) =>
+        error instanceof OpenReceiptError &&
+        error.code === "INVALID_DEVICE_PROFILE" &&
+        !Object.values(error.details).includes("secret receipt text"),
+    );
+
+    assert.equal(probed, false);
+  }
+});
+
 test("uses explicit raster fallback for non-native conformance inputs", () => {
   const rasterProfile = profile({
     capabilities: capabilities({ raster: "native" }),
