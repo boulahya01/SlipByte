@@ -15,7 +15,9 @@ Each evidence record identifies:
 - `reference`: a non-empty reference such as a test-report ID, documentation section, or source URL
 - optional `observedAt` and `notes`
 
-`defineCapabilityEvidence()` validates, normalizes, and freezes a record. `findCapabilityEvidence()` returns the records for one profile/capability pair.
+`defineCapabilityEvidence()` accepts an untrusted value, validates the complete shape, normalizes text fields, and returns a frozen record. `findCapabilityEvidence()` likewise validates an untrusted collection and query before returning the records for one profile/capability pair. This makes JSON, database, or externally sourced compatibility data cross an explicit runtime-validation boundary instead of relying only on TypeScript annotations.
+
+Malformed values are not copied into structured error details. Validation reports safe field/type metadata so arbitrary external objects, credentials, or source payloads do not accidentally become diagnostics.
 
 ## No inferred consensus
 
