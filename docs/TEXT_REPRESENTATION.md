@@ -18,7 +18,7 @@ Each `NativeTextRepresentationCandidate` has a stable `id` plus `canRepresent(te
 { kind: "native", encodingId: "pc437" }
 ```
 
-`textEncodings` is an allowlist of generic encoding identifiers, not a complete protocol configuration. The selection contract does not contain ESC/POS bytes or code-page command values. A protocol adapter is responsible for mapping the selected `encodingId` to reviewed device/protocol configuration, such as a model-specific ESC/POS code-page selector. This avoids turning one vendor's numeric table values into generic core truth.
+`textEncodings` is an allowlist of generic encoding identifiers, not a complete protocol configuration. Entries are normalized as trimmed text identifiers and reject empty values, non-text entries, and C0/DEL control characters before representation selection. The selection contract does not contain ESC/POS bytes or code-page command values. A protocol adapter is responsible for mapping the selected `encodingId` to reviewed device/protocol configuration, such as a model-specific ESC/POS code-page selector. This avoids turning one vendor's numeric table values into generic core truth.
 
 A candidate probe must return a boolean. Probe failures become structured `TEXT_REPRESENTATION_FAILED` errors without copying receipt text or arbitrary thrown values into diagnostics.
 
