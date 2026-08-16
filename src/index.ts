@@ -61,6 +61,7 @@ export type {
   EscPosCutFallback,
   EscPosEncoderOptions,
   EscPosTextEncoder,
+  EscPosTextEncodingConfig,
 } from "./escpos.js";
 export {
   GRAPHEME_TEXT_MEASURER,
