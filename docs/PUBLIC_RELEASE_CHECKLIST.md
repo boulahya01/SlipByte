@@ -43,53 +43,61 @@ The following are **not required merely to develop in public**, but they are req
 
 - [ ] `npm run check` passes from a clean checkout
 - [ ] package lockfile is committed for reproducible contributor/CI installs
-- [ ] `npm pack --dry-run` contains only intended distributable files
-- [ ] public exports match documented API
+- [ ] `npm run release:check` passes on the exact release head
 - [ ] package name and npm ownership are confirmed
-- [ ] package version follows semver
-- [x] `prepublishOnly` prevents normal publishing when validation fails
+- [ ] package version is changed from `0.0.0-dev` to the intended semver release
+- [x] package artifact policy is encoded: only `dist`, package metadata, README, and LICENSE may ship
+- [x] `prepublishOnly` runs the complete release check and blocks normal publishing when validation or package verification fails
 - [ ] npm provenance / trusted publishing is configured when the release workflow is introduced
+
+`npm run release:check` performs the full TypeScript/test gate and then runs `npm pack --dry-run --json --ignore-scripts` through `scripts/verify-package.mjs`. The verifier requires `dist/index.js`, `dist/index.d.ts`, package metadata, README, and LICENSE and rejects repository-only files such as `src`, `test`, `scripts`, `docs`, and `.github` from the npm artifact.
 
 ### Core v0.1 pipeline
 
 - [x] receipt/print document foundation
 - [x] deterministic layout engine
-- [x] initial capability/device profile model
-- [ ] versioned print-document/schema contract
-- [ ] ESC/POS encoder with deterministic fixtures
-- [ ] TCP transport
-- [ ] practical USB path or an explicitly deferred USB scope decision
-- [ ] mock printer / preview workflow
-- [ ] structured diagnostics/error model for transport/device failures
-- [ ] compatibility fixtures/profile evidence
+- [x] capability/device profile model
+- [x] versioned print-document/schema contract
+- [x] ESC/POS encoder with deterministic fixtures
+- [x] TCP transport
+- [x] USB explicitly deferred from the v0.1 core unless hardware evidence forces reprioritization
+- [x] mock printer / preview workflow
+- [x] structured diagnostics/error model for transport/device failures
+- [x] compatibility evidence contracts
+- [x] native-text versus raster representation selection
+- [x] profile-scoped ESC/POS text configuration
+- [x] canonical raster image and explicit ESC/POS raster strategy boundary
+- [x] Canvas2D Unicode-to-raster adapter
+- [ ] real runtime/font Unicode conformance evidence for representative Arabic/RTL, CJK, combining-mark, emoji, and mixed-script fixtures
 
 ### Compatibility and safety
 
-- [ ] every named printer compatibility claim has exact evidence
-- [ ] untested protocol compatibility is labeled unverified
-- [ ] unsupported capabilities fail explicitly rather than silently
-- [ ] unknown/missing compatibility evidence is not converted into a support claim
-- [ ] disruptive hardware actions are capability-aware and explicit
-- [ ] normal text cannot inject raw printer control commands
-- [ ] network/device responses are treated as untrusted input
-- [ ] diagnostics avoid leaking secrets or receipt contents by default
+- [x] untested protocol/device compatibility remains labeled unverified
+- [x] unsupported capabilities fail explicitly rather than silently
+- [x] unknown/missing compatibility evidence is not converted into a support claim
+- [x] disruptive hardware actions represented by the current core are capability-aware and explicit
+- [x] normal text cannot inject raw printer control commands
+- [x] external/runtime metadata is validated before use in structured contracts
+- [x] diagnostics avoid leaking receipt contents or arbitrary low-level payloads by default
+- [ ] every named physical-printer compatibility claim in the release has exact evidence
+- [ ] end-to-end physical-printer evidence is recorded for the release target
 
 ### Developer experience
 
-- [ ] first released example works by copy/paste
-- [ ] hardware-free preview/mock path works
-- [ ] common errors explain the next action
-- [ ] TypeScript declarations are included in the npm artifact
-- [ ] API names/defaults are internally consistent
-- [ ] supported Node.js versions are tested/documented
+- [x] hardware-free preview/mock path works through the real layout path
+- [x] common transport/encoding failures expose structured diagnostic guidance
+- [x] public lower-level API names and boundaries are documented
+- [ ] first released copy/paste example is validated from an installed package
+- [ ] TypeScript declarations are confirmed in the packed npm artifact by `npm run release:check`
+- [ ] supported Node.js versions are exercised on the release head
 
 ### AI-agent usability
 
-- [ ] AGENTS.md matches released architecture
-- [ ] public APIs document defaults, errors, capability requirements, and fallback behavior
-- [ ] examples do not depend on hidden context
-- [ ] structured errors are stable enough for tools to react to
-- [ ] unsupported behavior is explicit instead of requiring brand/model inference
+- [x] AGENTS.md describes the current architecture and maintenance constraints
+- [x] public contracts document capability/fallback boundaries instead of relying on printer-brand inference
+- [x] examples clearly distinguish implemented API from unreleased target API
+- [x] structured OpenReceipt errors are available for tools to classify failures
+- [x] unsupported behavior is explicit instead of requiring brand/model inference
 
 ### CI / release infrastructure
 
@@ -110,3 +118,5 @@ Only publish the first npm version when the project can answer these questions a
 2. What does it not support yet?
 3. Which physical-device claims are actually verified?
 4. How can a developer test behavior without risking production hardware or data?
+
+Repository visibility changes and npm publication remain explicit maintainer actions. Completing this checklist does not authorize either action automatically.
