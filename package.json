@@ -21,6 +21,7 @@
     "typecheck": "tsc --noEmit",
     "test": "npm run build && node --test test/*.test.mjs",
     "check": "npm run typecheck && npm test",
+    "conformance:unicode": "npm run build && node scripts/unicode-raster-conformance.mjs",
     "prepublishOnly": "npm run check"
   },
   "engines": {
