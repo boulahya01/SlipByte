@@ -17,7 +17,7 @@ Each evidence record identifies:
 
 `defineCapabilityEvidence()` accepts an untrusted value, validates the complete shape, normalizes text fields, and returns a frozen record. `findCapabilityEvidence()` likewise validates an untrusted collection and query before returning the records for one profile/capability pair. This makes JSON, database, or externally sourced compatibility data cross an explicit runtime-validation boundary instead of relying only on TypeScript annotations.
 
-Malformed values are not copied into structured error details. Validation reports safe field/type metadata so arbitrary external objects, credentials, or source payloads do not accidentally become diagnostics.
+Malformed values are not copied into structured error details. Validation reports safe field/type metadata so arbitrary external objects, credentials, or source payloads do not accidentally become diagnostics. Evidence text also rejects unsafe control characters so externally sourced references and notes cannot inject terminal/control sequences into later logs or tooling.
 
 ## No inferred consensus
 
