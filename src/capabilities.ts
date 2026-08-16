@@ -1,7 +1,7 @@
 import { OpenReceiptError } from "./errors.js";
 
 const UNSAFE_IDENTIFIER_TEXT = /[\u0000-\u001F\u007F]/u;
-const UNSAFE_METADATA_TEXT = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/u;
+const UNSAFE_METADATA_TEXT = /[\u0000-\u001F\u007F]/u;
 
 export type CapabilitySupport = "native" | "fallback" | "unsupported";
 
