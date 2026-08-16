@@ -43,6 +43,15 @@ export type {
   RasterImage,
   RasterTextRenderer,
 } from "./raster.js";
+export { createCanvasRasterTextRenderer } from "./canvas-raster.js";
+export type {
+  Canvas2DContextLike,
+  CanvasImageDataLike,
+  CanvasRasterTextOptions,
+  CanvasSurfaceFactory,
+  CanvasSurfaceLike,
+  CanvasTextDirection,
+} from "./canvas-raster.js";
 export {
   ESC_POS_GS_V0_RASTER_ENCODER,
   encodeEscPosRaster,
