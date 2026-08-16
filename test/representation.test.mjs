@@ -178,6 +178,42 @@ test("rejects malformed device profile shapes with structured errors before prob
   }
 });
 
+test("does not echo arbitrary invalid capability payloads in device profile diagnostics", () => {
+  const sensitiveCapabilityPayload = { secret: "do-not-log" };
+  let probed = false;
+
+  assert.throws(
+    () =>
+      selectTextRepresentation(
+        "secret receipt text",
+        profile({
+          capabilities: capabilities({ text: sensitiveCapabilityPayload }),
+        }),
+        {
+          nativeCandidates: [
+            {
+              id: "ascii",
+              canRepresent() {
+                probed = true;
+                return true;
+              },
+            },
+          ],
+        },
+      ),
+    (error) =>
+      error instanceof OpenReceiptError &&
+      error.code === "INVALID_DEVICE_PROFILE" &&
+      error.details.capability === "text" &&
+      error.details.receivedType === "object" &&
+      !("support" in error.details) &&
+      !Object.values(error.details).includes(sensitiveCapabilityPayload) &&
+      !Object.values(error.details).includes("secret receipt text"),
+  );
+
+  assert.equal(probed, false);
+});
+
 test("normalizes safe device profile identifiers before representation selection", () => {
   const selection = selectTextRepresentation(
     "ASCII",
