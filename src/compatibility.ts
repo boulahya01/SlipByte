@@ -22,13 +22,13 @@ export type CapabilityEvidenceQuery = Readonly<{
   capability: PrinterCapability;
 }>;
 
-export function defineCapabilityEvidence(
-  evidence: CapabilityEvidence,
-): CapabilityEvidence {
+export function defineCapabilityEvidence(evidence: unknown): CapabilityEvidence {
   const candidate = evidence as Partial<CapabilityEvidence> | null;
 
-  if (candidate === null || typeof candidate !== "object") {
-    throw invalidEvidence("Compatibility evidence must be an object.");
+  if (candidate === null || typeof candidate !== "object" || Array.isArray(candidate)) {
+    throw invalidEvidence("Compatibility evidence must be an object.", {
+      receivedType: Array.isArray(candidate) ? "array" : typeof candidate,
+    });
   }
 
   const profileId = requireText(candidate.profileId, "profileId");
@@ -36,23 +36,24 @@ export function defineCapabilityEvidence(
   if (!isPrinterCapability(candidate.capability)) {
     throw invalidEvidence("Compatibility evidence capability is invalid.", {
       profileId,
-      capability: candidate.capability,
+      field: "capability",
+      receivedType: typeof candidate.capability,
     });
   }
 
   if (!isCapabilitySupport(candidate.support)) {
     throw invalidEvidence("Compatibility evidence support state is invalid.", {
       profileId,
-      capability: candidate.capability,
-      support: candidate.support,
+      field: "support",
+      receivedType: typeof candidate.support,
     });
   }
 
   if (!isEvidenceSource(candidate.source)) {
     throw invalidEvidence("Compatibility evidence source is invalid.", {
       profileId,
-      capability: candidate.capability,
-      source: candidate.source,
+      field: "source",
+      receivedType: typeof candidate.source,
     });
   }
 
@@ -72,23 +73,28 @@ export function defineCapabilityEvidence(
 }
 
 export function findCapabilityEvidence(
-  evidence: readonly CapabilityEvidence[],
-  query: CapabilityEvidenceQuery,
+  evidence: unknown,
+  query: unknown,
 ): readonly CapabilityEvidence[] {
   if (!Array.isArray(evidence)) {
-    throw invalidEvidence("Compatibility evidence collection must be an array.");
+    throw invalidEvidence("Compatibility evidence collection must be an array.", {
+      receivedType: typeof evidence,
+    });
   }
 
   const candidate = query as Partial<CapabilityEvidenceQuery> | null;
-  if (candidate === null || typeof candidate !== "object") {
-    throw invalidEvidence("Compatibility evidence query must be an object.");
+  if (candidate === null || typeof candidate !== "object" || Array.isArray(candidate)) {
+    throw invalidEvidence("Compatibility evidence query must be an object.", {
+      receivedType: Array.isArray(candidate) ? "array" : typeof candidate,
+    });
   }
 
   const profileId = requireText(candidate.profileId, "profileId");
   if (!isPrinterCapability(candidate.capability)) {
     throw invalidEvidence("Compatibility evidence query capability is invalid.", {
       profileId,
-      capability: candidate.capability,
+      field: "capability",
+      receivedType: typeof candidate.capability,
     });
   }
 
