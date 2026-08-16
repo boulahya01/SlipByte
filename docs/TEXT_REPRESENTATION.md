@@ -12,13 +12,15 @@ Native text is considered only when all of these conditions hold:
 - the candidate id is explicitly listed in `DeviceProfile.textEncodings`;
 - the configured native candidate reports that it can represent the complete laid-out text run.
 
-Each `NativeTextRepresentationCandidate` has a stable `id` plus `canRepresent(text)`. Candidates omitted from the profile encoding allowlist are not probed or selected. The first profile-declared candidate that can represent the complete run is selected deterministically and returned as:
+Each `NativeTextRepresentationCandidate` has a stable `id` plus `canRepresent(text)`. Candidates omitted from the profile encoding allowlist are not probed or selected. Candidate ids must be unique after normalization so one encoding id cannot resolve to multiple implementations.
+
+`DeviceProfile.textEncodings` is ordered preference, not just membership. Selection walks that profile-declared order and chooses the first configured encoding whose candidate can represent the complete run, regardless of the order in which the caller supplies `nativeCandidates`. This keeps device/profile policy authoritative and returns a deterministic result such as:
 
 ```ts
 { kind: "native", encodingId: "pc437" }
 ```
 
-`textEncodings` is an allowlist of generic encoding identifiers, not a complete protocol configuration. Entries are normalized as trimmed text identifiers and reject empty values, non-text entries, and C0/DEL control characters before representation selection. The selection contract does not contain ESC/POS bytes or code-page command values. A protocol adapter is responsible for mapping the selected `encodingId` to reviewed device/protocol configuration, such as a model-specific ESC/POS code-page selector. This avoids turning one vendor's numeric table values into generic core truth.
+`textEncodings` contains generic encoding identifiers, not complete protocol configuration. Entries are normalized as trimmed text identifiers and reject empty values, non-text entries, and C0/DEL control characters before representation selection. The selection contract does not contain ESC/POS bytes or code-page command values. A protocol adapter is responsible for mapping the selected `encodingId` to reviewed device/protocol configuration, such as a model-specific ESC/POS code-page selector. This avoids turning one vendor's numeric table values into generic core truth.
 
 A candidate probe must return a boolean. Probe failures become structured `TEXT_REPRESENTATION_FAILED` errors without copying receipt text or arbitrary thrown values into diagnostics.
 
