@@ -114,6 +114,42 @@ test("rejects malformed renderer configuration before drawing", () => {
   assert.equal(created, false);
 });
 
+test("wraps Canvas context acquisition failures", () => {
+  const renderer = createCanvasRasterTextRenderer(
+    () => ({
+      getContext() {
+        throw new Error("private low-level context failure");
+      },
+    }),
+    { id: "safe-context", font: "16px Fixture", width: 8, height: 1 },
+  );
+
+  assert.throws(
+    () => renderTextToRaster("private receipt مرحبا", renderer),
+    (error) =>
+      error instanceof OpenReceiptError &&
+      error.code === "RASTER_RENDER_FAILED" &&
+      error.message.includes("context acquisition") &&
+      JSON.stringify(error.details).includes("private") === false,
+  );
+});
+
+test("rejects Canvas image data dimensions that differ from configured surface", () => {
+  const renderer = createCanvasRasterTextRenderer(
+    () => fakeSurface({ width: 4, height: 1, data: new Array(16).fill(255) }),
+    { id: "dimension-safe", font: "16px Fixture", width: 8, height: 1 },
+  );
+
+  assert.throws(
+    () => renderTextToRaster("fixture", renderer),
+    (error) =>
+      error instanceof OpenReceiptError &&
+      error.code === "RASTER_RENDER_FAILED" &&
+      error.details.expectedWidth === 8 &&
+      error.details.receivedWidth === 4,
+  );
+});
+
 test("does not copy receipt text into Canvas failure diagnostics", () => {
   const renderer = createCanvasRasterTextRenderer(
     () => ({
