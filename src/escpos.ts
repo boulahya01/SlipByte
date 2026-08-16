@@ -70,7 +70,11 @@ export function encodeEscPos(
     );
   }
 
-  if (options.textEncoder !== undefined && options.textEncoding !== undefined) {
+  const resolvedOptions = resolveEncoderOptions(options);
+  if (
+    resolvedOptions.textEncoder !== undefined &&
+    resolvedOptions.textEncoding !== undefined
+  ) {
     throw new OpenReceiptError(
       "INVALID_ENCODER_OPTION",
       "Configure either textEncoder or textEncoding, not both.",
@@ -79,15 +83,16 @@ export function encodeEscPos(
 
   const textEncoding = resolveTextEncodingConfig(
     resolvedProfile,
-    options.textEncoding,
+    resolvedOptions.textEncoding,
   );
   const textEncoder = textEncoding?.encoder ?? resolveTextEncoder(
-    options.textEncoder ?? ESC_POS_ASCII_TEXT_ENCODER,
+    resolvedOptions.textEncoder ?? ESC_POS_ASCII_TEXT_ENCODER,
   );
-  const cutFallback = resolveCutFallback(options.cutFallback);
+  const cutFallback = resolveCutFallback(resolvedOptions.cutFallback);
   const bytes: number[] = [ESC, 0x40];
   let bold = false;
   let selectedTextEncoding = false;
+  let validatedDirectTextEncoder = false;
 
   for (const node of layout.nodes) {
     switch (node.type) {
@@ -97,6 +102,9 @@ export function encodeEscPos(
         if (textEncoding && !selectedTextEncoding) {
           bytes.push(ESC, 0x74, textEncoding.codePage);
           selectedTextEncoding = true;
+        } else if (!textEncoding && !validatedDirectTextEncoder) {
+          requireDeclaredTextEncoding(resolvedProfile, textEncoder.id);
+          validatedDirectTextEncoder = true;
         }
 
         if (node.bold !== bold) {
@@ -165,6 +173,18 @@ function requireNativeCapability(
   );
 }
 
+function resolveEncoderOptions(value: EscPosEncoderOptions): EscPosEncoderOptions {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    throw new OpenReceiptError(
+      "INVALID_ENCODER_OPTION",
+      "ESC/POS encoder options must be an object.",
+      { receivedType: Array.isArray(value) ? "array" : typeof value },
+    );
+  }
+
+  return value;
+}
+
 function resolveTextEncodingConfig(
   profile: DeviceProfile,
   value: EscPosTextEncodingConfig | undefined,
@@ -189,13 +209,7 @@ function resolveTextEncodingConfig(
     );
   }
 
-  if (!(profile.textEncodings ?? []).includes(encodingId)) {
-    throw new OpenReceiptError(
-      "INVALID_ENCODER_OPTION",
-      "ESC/POS text encoding must be declared by the device profile.",
-      { profileId: profile.id },
-    );
-  }
+  requireDeclaredTextEncoding(profile, encodingId);
 
   if (!Number.isInteger(value.codePage) || value.codePage < 0 || value.codePage > 255) {
     throw new OpenReceiptError(
@@ -220,6 +234,19 @@ function resolveTextEncodingConfig(
     codePage: value.codePage,
     encoder,
   });
+}
+
+function requireDeclaredTextEncoding(
+  profile: DeviceProfile,
+  encodingId: string,
+): void {
+  if ((profile.textEncodings ?? []).includes(encodingId)) return;
+
+  throw new OpenReceiptError(
+    "INVALID_ENCODER_OPTION",
+    "ESC/POS text encoding must be declared by the device profile.",
+    { profileId: profile.id },
+  );
 }
 
 function resolveTextEncoder(encoder: EscPosTextEncoder): EscPosTextEncoder {
