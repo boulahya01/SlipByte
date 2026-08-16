@@ -22,6 +22,7 @@ const profile = (overrides = {}) => ({
   id: "fixture-printer",
   protocol: "escpos",
   capabilities: capabilities(),
+  textEncodings: ["ascii"],
   ...overrides,
 });
 
@@ -35,13 +36,43 @@ const asciiCandidate = {
   },
 };
 
-test("selects the first explicit native encoding that can represent the text", () => {
+test("selects the first profile-declared native encoding that can represent the text", () => {
   const selection = selectTextRepresentation("Cafe 123", profile(), {
     nativeCandidates: [asciiCandidate],
   });
 
   assert.deepEqual(selection, { kind: "native", encodingId: "ascii" });
   assert.equal(Object.isFrozen(selection), true);
+});
+
+test("does not probe or select a native candidate omitted from the profile encoding allowlist", () => {
+  let probed = false;
+
+  const selection = selectTextRepresentation(
+    "ASCII",
+    profile({
+      textEncodings: ["declared-only"],
+      capabilities: capabilities({ raster: "native" }),
+    }),
+    {
+      nativeCandidates: [
+        {
+          id: "not-declared",
+          canRepresent() {
+            probed = true;
+            return true;
+          },
+        },
+      ],
+      allowRasterFallback: true,
+    },
+  );
+
+  assert.equal(probed, false);
+  assert.deepEqual(selection, {
+    kind: "raster",
+    usesCapabilityFallback: false,
+  });
 });
 
 test("uses explicit raster fallback for non-native conformance inputs", () => {
@@ -71,7 +102,10 @@ test("uses explicit raster fallback for non-native conformance inputs", () => {
 test("does not use a native candidate when the profile does not declare native text", () => {
   const selection = selectTextRepresentation(
     "ASCII",
-    profile({ capabilities: capabilities({ text: "unsupported", raster: "native" }) }),
+    profile({
+      textEncodings: ["always"],
+      capabilities: capabilities({ text: "unsupported", raster: "native" }),
+    }),
     {
       nativeCandidates: [{ id: "always", canRepresent: () => true }],
       allowRasterFallback: true,
@@ -131,16 +165,20 @@ test("rejects malformed candidates and probe failures without leaking text", () 
 
   assert.throws(
     () =>
-      selectTextRepresentation("secret receipt text", profile(), {
-        nativeCandidates: [
-          {
-            id: "probe",
-            canRepresent() {
-              throw new Error("sensitive codec failure");
+      selectTextRepresentation(
+        "secret receipt text",
+        profile({ textEncodings: ["probe"] }),
+        {
+          nativeCandidates: [
+            {
+              id: "probe",
+              canRepresent() {
+                throw new Error("sensitive codec failure");
+              },
             },
-          },
-        ],
-      }),
+          ],
+        },
+      ),
     (error) =>
       error instanceof OpenReceiptError &&
       error.code === "TEXT_REPRESENTATION_FAILED" &&
