@@ -114,7 +114,7 @@ test("rejects malformed renderer configuration before drawing", () => {
   assert.equal(created, false);
 });
 
-test("wraps Canvas context acquisition failures", () => {
+test("wraps Canvas context acquisition failures at the Canvas adapter boundary", () => {
   const renderer = createCanvasRasterTextRenderer(
     () => ({
       getContext() {
@@ -125,7 +125,7 @@ test("wraps Canvas context acquisition failures", () => {
   );
 
   assert.throws(
-    () => renderTextToRaster("private receipt مرحبا", renderer),
+    () => renderer.render("private receipt مرحبا"),
     (error) =>
       error instanceof OpenReceiptError &&
       error.code === "RASTER_RENDER_FAILED" &&
@@ -141,7 +141,7 @@ test("rejects Canvas image data dimensions that differ from configured surface",
   );
 
   assert.throws(
-    () => renderTextToRaster("fixture", renderer),
+    () => renderer.render("fixture"),
     (error) =>
       error instanceof OpenReceiptError &&
       error.code === "RASTER_RENDER_FAILED" &&
