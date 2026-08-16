@@ -117,6 +117,7 @@ export function defineDeviceProfile(profile: DeviceProfile): DeviceProfile {
       );
     }
 
+    const seenTextEncodings = new Set<string>();
     textEncodings = candidate.textEncodings.map((encoding, index) => {
       if (typeof encoding !== "string") {
         throw new OpenReceiptError(
@@ -134,6 +135,15 @@ export function defineDeviceProfile(profile: DeviceProfile): DeviceProfile {
           { profileId: id, encodingIndex: index },
         );
       }
+
+      if (seenTextEncodings.has(normalized)) {
+        throw new OpenReceiptError(
+          "INVALID_DEVICE_PROFILE",
+          "textEncodings entries must be unique after normalization.",
+          { profileId: id, encodingIndex: index },
+        );
+      }
+      seenTextEncodings.add(normalized);
 
       return normalized;
     });
