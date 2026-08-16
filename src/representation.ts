@@ -1,4 +1,8 @@
-import { resolveCapability, type DeviceProfile } from "./capabilities.js";
+import {
+  defineDeviceProfile,
+  resolveCapability,
+  type DeviceProfile,
+} from "./capabilities.js";
 import { OpenReceiptError } from "./errors.js";
 
 const UNSAFE_IDENTIFIER_TEXT = /[\u0000-\u001F\u007F]/u;
@@ -40,15 +44,19 @@ export function selectTextRepresentation(
     );
   }
 
+  const resolvedProfile = defineDeviceProfile(profile);
   const resolvedOptions = resolveOptions(options);
   const candidates = resolveNativeCandidates(resolvedOptions.nativeCandidates);
+  const configuredEncodingIds = new Set(resolvedProfile.textEncodings ?? []);
   const allowRasterFallback = resolveRasterFallbackOption(
     resolvedOptions.allowRasterFallback,
   );
-  const textCapability = resolveCapability(profile, "text");
+  const textCapability = resolveCapability(resolvedProfile, "text");
 
   if (textCapability.support === "native") {
     for (const [index, candidate] of candidates.entries()) {
+      if (!configuredEncodingIds.has(candidate.id)) continue;
+
       let supported: unknown;
 
       try {
@@ -79,7 +87,7 @@ export function selectTextRepresentation(
   }
 
   if (allowRasterFallback) {
-    const rasterCapability = resolveCapability(profile, "raster");
+    const rasterCapability = resolveCapability(resolvedProfile, "raster");
     if (rasterCapability.usable) {
       return Object.freeze({
         kind: "raster",
