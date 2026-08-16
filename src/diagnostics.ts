@@ -105,6 +105,18 @@ export function diagnoseError(error: unknown): OpenReceiptDiagnostic {
         ["Correct the evidence record before using it for compatibility decisions."],
       );
 
+    case "INVALID_TEXT_REPRESENTATION_OPTION":
+    case "TEXT_REPRESENTATION_FAILED":
+    case "UNSUPPORTED_TEXT_REPRESENTATION":
+      return diagnostic(
+        error.code,
+        "encoding",
+        "Text cannot be represented safely with the configured native or raster policy.",
+        "not-applicable",
+        "not-applicable",
+        ["Review native encoding candidates and explicit raster fallback capability before transport."],
+      );
+
     case "UNSUPPORTED_PROTOCOL":
     case "INVALID_ENCODER_OPTION":
     case "TEXT_ENCODING_FAILED":
