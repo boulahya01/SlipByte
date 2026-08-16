@@ -1,6 +1,8 @@
 import type { CapabilitySupport, PrinterCapability } from "./capabilities.js";
 import { OpenReceiptError } from "./errors.js";
 
+const UNSAFE_COMPATIBILITY_TEXT = /[\u0000-\u0009\u000B\u000C\u000E-\u001F\u007F]/u;
+
 export type CompatibilityEvidenceSource =
   | "hardware-test"
   | "manufacturer-documentation"
@@ -115,6 +117,14 @@ function requireText(value: unknown, field: string): string {
       receivedType: typeof value,
     });
   }
+
+  if (UNSAFE_COMPATIBILITY_TEXT.test(value)) {
+    throw invalidEvidence(
+      `Compatibility evidence ${field} contains an unsafe control character.`,
+      { field },
+    );
+  }
+
   return value.trim();
 }
 
@@ -143,6 +153,14 @@ function optionalTextList(
         receivedType: typeof entry,
       });
     }
+
+    if (UNSAFE_COMPATIBILITY_TEXT.test(entry)) {
+      throw invalidEvidence(
+        `Compatibility evidence ${field} entry contains an unsafe control character.`,
+        { field, index },
+      );
+    }
+
     return entry.trim();
   });
 }
