@@ -10,10 +10,18 @@ import type { LayoutDocument } from "./layout.js";
 const ESC = 0x1b;
 const GS = 0x1d;
 const LF = 0x0a;
+const UNSAFE_IDENTIFIER_TEXT = /[\u0000-\u001F\u007F]/u;
 
 export type EscPosTextEncoder = Readonly<{
   id: string;
   encode: (text: string) => Uint8Array;
+}>;
+
+export type EscPosTextEncodingConfig = Readonly<{
+  profileId: string;
+  encodingId: string;
+  codePage: number;
+  encoder: EscPosTextEncoder;
 }>;
 
 export type EscPosCutFallback = Readonly<{
@@ -23,6 +31,7 @@ export type EscPosCutFallback = Readonly<{
 
 export type EscPosEncoderOptions = Readonly<{
   textEncoder?: EscPosTextEncoder;
+  textEncoding?: EscPosTextEncodingConfig;
   cutFallback?: EscPosCutFallback;
 }>;
 
@@ -61,15 +70,42 @@ export function encodeEscPos(
     );
   }
 
-  const textEncoder = resolveTextEncoder(options.textEncoder ?? ESC_POS_ASCII_TEXT_ENCODER);
-  const cutFallback = resolveCutFallback(options.cutFallback);
+  const resolvedOptions = resolveEncoderOptions(options);
+  if (
+    resolvedOptions.textEncoder !== undefined &&
+    resolvedOptions.textEncoding !== undefined
+  ) {
+    throw new OpenReceiptError(
+      "INVALID_ENCODER_OPTION",
+      "Configure either textEncoder or textEncoding, not both.",
+    );
+  }
+
+  const textEncoding = resolveTextEncodingConfig(
+    resolvedProfile,
+    resolvedOptions.textEncoding,
+  );
+  const textEncoder = textEncoding?.encoder ?? resolveTextEncoder(
+    resolvedOptions.textEncoder ?? ESC_POS_ASCII_TEXT_ENCODER,
+  );
+  const cutFallback = resolveCutFallback(resolvedOptions.cutFallback);
   const bytes: number[] = [ESC, 0x40];
   let bold = false;
+  let selectedTextEncoding = false;
+  let validatedDirectTextEncoder = false;
 
   for (const node of layout.nodes) {
     switch (node.type) {
       case "line": {
         requireNativeCapability(resolvedProfile, "text");
+
+        if (textEncoding && !selectedTextEncoding) {
+          bytes.push(ESC, 0x74, textEncoding.codePage);
+          selectedTextEncoding = true;
+        } else if (!textEncoding && !validatedDirectTextEncoder) {
+          requireDeclaredTextEncoding(resolvedProfile, textEncoder.id);
+          validatedDirectTextEncoder = true;
+        }
 
         if (node.bold !== bold) {
           bytes.push(ESC, 0x45, node.bold ? 1 : 0);
@@ -118,7 +154,10 @@ export function encodeEscPos(
   return Uint8Array.from(bytes);
 }
 
-function requireNativeCapability(profile: DeviceProfile, capability: PrinterCapability): void {
+function requireNativeCapability(
+  profile: DeviceProfile,
+  capability: PrinterCapability,
+): void {
   const resolution = resolveCapability(profile, capability);
   if (resolution.support === "native") return;
 
@@ -134,21 +173,114 @@ function requireNativeCapability(profile: DeviceProfile, capability: PrinterCapa
   );
 }
 
+function resolveEncoderOptions(value: EscPosEncoderOptions): EscPosEncoderOptions {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    throw new OpenReceiptError(
+      "INVALID_ENCODER_OPTION",
+      "ESC/POS encoder options must be an object.",
+      { receivedType: Array.isArray(value) ? "array" : typeof value },
+    );
+  }
+
+  return value;
+}
+
+function resolveTextEncodingConfig(
+  profile: DeviceProfile,
+  value: EscPosTextEncodingConfig | undefined,
+): EscPosTextEncodingConfig | undefined {
+  if (value === undefined) return undefined;
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    throw new OpenReceiptError(
+      "INVALID_ENCODER_OPTION",
+      "textEncoding must be an object when provided.",
+      { receivedType: Array.isArray(value) ? "array" : typeof value },
+    );
+  }
+
+  const profileId = requireSafeIdentifier(value.profileId, "textEncoding.profileId");
+  const encodingId = requireSafeIdentifier(value.encodingId, "textEncoding.encodingId");
+
+  if (profileId !== profile.id) {
+    throw new OpenReceiptError(
+      "INVALID_ENCODER_OPTION",
+      "ESC/POS text encoding configuration belongs to a different device profile.",
+      { profileId: profile.id },
+    );
+  }
+
+  requireDeclaredTextEncoding(profile, encodingId);
+
+  if (!Number.isInteger(value.codePage) || value.codePage < 0 || value.codePage > 255) {
+    throw new OpenReceiptError(
+      "INVALID_ENCODER_OPTION",
+      "ESC/POS text encoding codePage must be an integer from 0 through 255.",
+      { profileId: profile.id },
+    );
+  }
+
+  const encoder = resolveTextEncoder(value.encoder);
+  if (encoder.id !== encodingId) {
+    throw new OpenReceiptError(
+      "INVALID_ENCODER_OPTION",
+      "ESC/POS text encoder id must match textEncoding.encodingId.",
+      { profileId: profile.id },
+    );
+  }
+
+  return Object.freeze({
+    profileId,
+    encodingId,
+    codePage: value.codePage,
+    encoder,
+  });
+}
+
+function requireDeclaredTextEncoding(
+  profile: DeviceProfile,
+  encodingId: string,
+): void {
+  if ((profile.textEncodings ?? []).includes(encodingId)) return;
+
+  throw new OpenReceiptError(
+    "INVALID_ENCODER_OPTION",
+    "ESC/POS text encoding must be declared by the device profile.",
+    { profileId: profile.id },
+  );
+}
+
 function resolveTextEncoder(encoder: EscPosTextEncoder): EscPosTextEncoder {
   if (
     typeof encoder !== "object" ||
     encoder === null ||
     typeof encoder.id !== "string" ||
     !encoder.id.trim() ||
+    UNSAFE_IDENTIFIER_TEXT.test(encoder.id) ||
     typeof encoder.encode !== "function"
   ) {
     throw new OpenReceiptError(
       "INVALID_ENCODER_OPTION",
-      "textEncoder must provide a non-empty id and an encode(text) function.",
+      "textEncoder must provide a safe non-empty id and an encode(text) function.",
     );
   }
 
-  return encoder;
+  return Object.freeze({ id: encoder.id.trim(), encode: encoder.encode });
+}
+
+function requireSafeIdentifier(value: unknown, field: string): string {
+  if (
+    typeof value !== "string" ||
+    !value.trim() ||
+    UNSAFE_IDENTIFIER_TEXT.test(value)
+  ) {
+    throw new OpenReceiptError(
+      "INVALID_ENCODER_OPTION",
+      `${field} must be safe non-empty text.`,
+      { field, receivedType: typeof value },
+    );
+  }
+
+  return value.trim();
 }
 
 function resolveCutFallback(
