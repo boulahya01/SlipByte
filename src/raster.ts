@@ -55,7 +55,12 @@ export function defineRasterImage(value: unknown): RasterImage {
 
   for (let index = 0; index < data.length; index += 1) {
     const byte = data[index];
-    if (!Number.isInteger(byte) || byte < 0 || byte > 255) {
+    if (
+      typeof byte !== "number" ||
+      !Number.isInteger(byte) ||
+      byte < 0 ||
+      byte > 255
+    ) {
       throw new OpenReceiptError(
         "INVALID_RASTER_IMAGE",
         "Raster image data entries must be bytes.",
