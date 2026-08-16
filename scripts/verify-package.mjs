@@ -1,71 +1,143 @@
 import { spawnSync } from "node:child_process";
+import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 
 const npmCommand = process.platform === "win32" ? "npm.cmd" : "npm";
-const result = spawnSync(
-  npmCommand,
-  ["pack", "--dry-run", "--json", "--ignore-scripts"],
-  {
-    cwd: process.cwd(),
+const nodeCommand = process.execPath;
+
+const dryRun = run(npmCommand, [
+  "pack",
+  "--dry-run",
+  "--json",
+  "--ignore-scripts",
+]);
+const dryRunReport = parsePackReport(dryRun.stdout);
+verifyPackageShape(dryRunReport);
+
+const tempRoot = mkdtempSync(join(tmpdir(), "openreceipt-package-"));
+try {
+  const packed = run(npmCommand, [
+    "pack",
+    "--json",
+    "--ignore-scripts",
+    "--pack-destination",
+    tempRoot,
+  ]);
+  const packedReport = parsePackReport(packed.stdout);
+  verifyPackageShape(packedReport);
+
+  if (typeof packedReport.filename !== "string" || !packedReport.filename.endsWith(".tgz")) {
+    fail("npm pack did not report a valid tarball filename.");
+  }
+
+  const consumerDir = join(tempRoot, "consumer");
+  mkdirSync(consumerDir);
+  writeFileSync(
+    join(consumerDir, "package.json"),
+    JSON.stringify({ private: true, type: "module" }),
+  );
+
+  run(
+    npmCommand,
+    [
+      "install",
+      "--ignore-scripts",
+      "--no-audit",
+      "--no-fund",
+      join(tempRoot, packedReport.filename),
+    ],
+    consumerDir,
+  );
+
+  run(
+    nodeCommand,
+    [
+      "--input-type=module",
+      "--eval",
+      [
+        'import * as openreceipt from "openreceipt";',
+        'for (const name of ["receipt", "layoutReceipt", "createPrintDocument", "encodeEscPos", "sendTcp", "mockPrint", "diagnoseError"]) {',
+        '  if (typeof openreceipt[name] !== "function") throw new Error(`Missing package export: ${name}`);',
+        "}",
+      ].join("\n"),
+    ],
+    consumerDir,
+  );
+
+  console.log(
+    `Package artifact verified and importable: ${packedReport.files.length} files, ${packedReport.size ?? "unknown"} packed bytes.`,
+  );
+} finally {
+  rmSync(tempRoot, { recursive: true, force: true });
+}
+
+function run(command, args, cwd = process.cwd()) {
+  const result = spawnSync(command, args, {
+    cwd,
     encoding: "utf8",
     stdio: ["ignore", "pipe", "pipe"],
-  },
-);
+  });
 
-if (result.error) {
-  fail(`Unable to execute npm pack: ${result.error.message}`);
+  if (result.error) {
+    fail(`Unable to execute ${command}: ${result.error.message}`);
+  }
+
+  if (result.status !== 0) {
+    const detail = result.stderr.trim() || result.stdout.trim() || `${command} exited with status ${result.status}`;
+    fail(detail);
+  }
+
+  return result;
 }
 
-if (result.status !== 0) {
-  const detail = result.stderr.trim() || `npm pack exited with status ${result.status}`;
-  fail(detail);
+function parsePackReport(output) {
+  let report;
+  try {
+    report = JSON.parse(output);
+  } catch {
+    fail("npm pack did not return valid JSON output.");
+  }
+
+  if (!Array.isArray(report) || report.length !== 1 || !Array.isArray(report[0]?.files)) {
+    fail("npm pack returned an unexpected report shape.");
+  }
+
+  return report[0];
 }
 
-let report;
-try {
-  report = JSON.parse(result.stdout);
-} catch {
-  fail("npm pack did not return valid JSON output.");
-}
+function verifyPackageShape(packageReport) {
+  const paths = packageReport.files.map((entry) => entry.path);
+  const required = ["package.json", "README.md", "LICENSE", "dist/index.js", "dist/index.d.ts"];
 
-if (!Array.isArray(report) || report.length !== 1 || !Array.isArray(report[0]?.files)) {
-  fail("npm pack returned an unexpected report shape.");
-}
+  for (const requiredPath of required) {
+    if (!paths.includes(requiredPath)) {
+      fail(`Package artifact is missing required file: ${requiredPath}`);
+    }
+  }
 
-const packageReport = report[0];
-const paths = packageReport.files.map((entry) => entry.path);
-const required = ["package.json", "README.md", "LICENSE", "dist/index.js", "dist/index.d.ts"];
+  const allowedRootFiles = new Set(["package.json", "README.md", "LICENSE"]);
+  const unexpected = paths.filter(
+    (path) => !allowedRootFiles.has(path) && !path.startsWith("dist/"),
+  );
 
-for (const requiredPath of required) {
-  if (!paths.includes(requiredPath)) {
-    fail(`Package artifact is missing required file: ${requiredPath}`);
+  if (unexpected.length > 0) {
+    fail(`Package artifact contains unexpected files: ${unexpected.join(", ")}`);
+  }
+
+  const sourceArtifacts = paths.filter(
+    (path) =>
+      path.startsWith("src/") ||
+      path.startsWith("test/") ||
+      path.startsWith("scripts/") ||
+      path.startsWith("docs/") ||
+      path.startsWith(".github/"),
+  );
+
+  if (sourceArtifacts.length > 0) {
+    fail(`Package artifact leaks repository-only files: ${sourceArtifacts.join(", ")}`);
   }
 }
-
-const allowedRootFiles = new Set(["package.json", "README.md", "LICENSE"]);
-const unexpected = paths.filter(
-  (path) => !allowedRootFiles.has(path) && !path.startsWith("dist/"),
-);
-
-if (unexpected.length > 0) {
-  fail(`Package artifact contains unexpected files: ${unexpected.join(", ")}`);
-}
-
-const sourceArtifacts = paths.filter(
-  (path) =>
-    path.startsWith("src/") ||
-    path.startsWith("test/") ||
-    path.startsWith("scripts/") ||
-    path.startsWith("docs/") ||
-    path.startsWith(".github/"),
-);
-
-if (sourceArtifacts.length > 0) {
-  fail(`Package artifact leaks repository-only files: ${sourceArtifacts.join(", ")}`);
-}
-
-console.log(
-  `Package artifact verified: ${paths.length} files, ${packageReport.size ?? "unknown"} packed bytes.`,
-);
 
 function fail(message) {
   console.error(`Package verification failed: ${message}`);
