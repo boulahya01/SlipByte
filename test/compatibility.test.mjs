@@ -95,6 +95,37 @@ test("rejects malformed evidence without copying arbitrary values into error det
   }
 });
 
+test("does not echo profile identifiers when another evidence field is invalid", () => {
+  const sensitiveProfileId = "customer-private-profile-id";
+
+  assert.throws(
+    () =>
+      defineCapabilityEvidence({
+        profileId: sensitiveProfileId,
+        capability: "not-a-capability",
+        support: "native",
+        source: "hardware-test",
+        reference: "bench-001",
+      }),
+    (error) =>
+      error instanceof OpenReceiptError &&
+      error.code === "INVALID_COMPATIBILITY_EVIDENCE" &&
+      !Object.values(error.details).includes(sensitiveProfileId),
+  );
+
+  assert.throws(
+    () =>
+      findCapabilityEvidence([], {
+        profileId: sensitiveProfileId,
+        capability: "not-a-capability",
+      }),
+    (error) =>
+      error instanceof OpenReceiptError &&
+      error.code === "INVALID_COMPATIBILITY_EVIDENCE" &&
+      !Object.values(error.details).includes(sensitiveProfileId),
+  );
+});
+
 test("rejects unsafe control characters in evidence text without echoing content", () => {
   for (const evidence of [
     {
