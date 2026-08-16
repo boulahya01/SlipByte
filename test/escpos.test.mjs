@@ -17,12 +17,12 @@ const baseCapabilities = {
   status: "unsupported",
 };
 
-function profile(overrides = {}) {
+function profile(overrides = {}, textEncodings = ["ascii"]) {
   return defineDeviceProfile({
     id: "fixture-escpos",
     protocol: "escpos",
     capabilities: { ...baseCapabilities, ...overrides },
-    textEncodings: ["ascii"],
+    textEncodings,
   });
 }
 
@@ -100,13 +100,13 @@ test("default text encoding rejects unsupported characters without copying recei
   );
 });
 
-test("accepts an injected device-specific text encoder", () => {
+test("accepts a profile-declared injected device-specific text encoder", () => {
   const layout = {
     paper: { id: "fixture", widthMm: 80, columns: 48 },
     nodes: [{ type: "line", value: "é", bold: false, source: "text", sourceNodeIndex: 0 }],
   };
 
-  const bytes = encodeEscPos(layout, profile(), {
+  const bytes = encodeEscPos(layout, profile({}, ["fixture-code-page"]), {
     textEncoder: {
       id: "fixture-code-page",
       encode: () => Uint8Array.from([0x82]),
@@ -114,4 +114,18 @@ test("accepts an injected device-specific text encoder", () => {
   });
 
   assert.deepEqual([...bytes], [0x1b, 0x40, 0x82, 0x0a]);
+});
+
+test("rejects a direct text encoder omitted from the device profile", () => {
+  const layout = {
+    paper: { id: "fixture", widthMm: 80, columns: 48 },
+    nodes: [{ type: "line", value: "A", bold: false, source: "text", sourceNodeIndex: 0 }],
+  };
+
+  assert.throws(
+    () => encodeEscPos(layout, profile(), {
+      textEncoder: { id: "undeclared", encode: () => Uint8Array.from([0x41]) },
+    }),
+    (error) => error instanceof OpenReceiptError && error.code === "INVALID_ENCODER_OPTION",
+  );
 });
