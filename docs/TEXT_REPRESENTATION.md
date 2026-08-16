@@ -6,15 +6,19 @@ OpenReceipt keeps document and layout text Unicode-oriented. Choosing how that t
 
 ## Native text
 
-Native text is considered only when the device profile declares `text: "native"` and an explicitly configured native candidate reports that it can represent the complete laid-out text run.
+Native text is considered only when all of these conditions hold:
 
-Each `NativeTextRepresentationCandidate` has a stable `id` plus `canRepresent(text)`. The first matching candidate is selected deterministically and returned as:
+- the device profile declares `text: "native"`;
+- the candidate id is explicitly listed in `DeviceProfile.textEncodings`;
+- the configured native candidate reports that it can represent the complete laid-out text run.
+
+Each `NativeTextRepresentationCandidate` has a stable `id` plus `canRepresent(text)`. Candidates omitted from the profile encoding allowlist are not probed or selected. The first profile-declared candidate that can represent the complete run is selected deterministically and returned as:
 
 ```ts
 { kind: "native", encodingId: "pc437" }
 ```
 
-The selection contract does not contain ESC/POS bytes or code-page commands. A protocol adapter is responsible for mapping the selected `encodingId` to its reviewed device/protocol configuration. This avoids turning one vendor's code-page numbers into generic core truth.
+`textEncodings` is an allowlist of generic encoding identifiers, not a complete protocol configuration. The selection contract does not contain ESC/POS bytes or code-page command values. A protocol adapter is responsible for mapping the selected `encodingId` to reviewed device/protocol configuration, such as a model-specific ESC/POS code-page selector. This avoids turning one vendor's numeric table values into generic core truth.
 
 A candidate probe must return a boolean. Probe failures become structured `TEXT_REPRESENTATION_FAILED` errors without copying receipt text or arbitrary thrown values into diagnostics.
 
