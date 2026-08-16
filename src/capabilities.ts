@@ -33,49 +33,91 @@ export type CapabilityResolution = Readonly<{
 }>;
 
 export function defineDeviceProfile(profile: DeviceProfile): DeviceProfile {
-  if (!profile.id.trim()) {
+  const candidate = profile as Partial<DeviceProfile> | null;
+  if (candidate === null || typeof candidate !== "object" || Array.isArray(candidate)) {
     throw new OpenReceiptError(
       "INVALID_DEVICE_PROFILE",
-      "Device profiles require a non-empty id.",
-      { profile },
+      "Device profile must be an object.",
+      { receivedType: Array.isArray(candidate) ? "array" : typeof candidate },
     );
   }
 
-  if (!profile.protocol.trim()) {
+  if (typeof candidate.id !== "string") {
     throw new OpenReceiptError(
       "INVALID_DEVICE_PROFILE",
-      "Device profiles require a non-empty protocol identifier.",
-      { profileId: profile.id },
+      "Device profiles require a text id.",
+      { receivedType: typeof candidate.id },
+    );
+  }
+
+  const id = candidate.id.trim();
+  if (!id || UNSAFE_IDENTIFIER_TEXT.test(id)) {
+    throw new OpenReceiptError(
+      "INVALID_DEVICE_PROFILE",
+      "Device profiles require a safe non-empty id.",
+    );
+  }
+
+  if (typeof candidate.protocol !== "string") {
+    throw new OpenReceiptError(
+      "INVALID_DEVICE_PROFILE",
+      "Device profiles require a text protocol identifier.",
+      { receivedType: typeof candidate.protocol },
+    );
+  }
+
+  const protocol = candidate.protocol.trim();
+  if (!protocol || UNSAFE_IDENTIFIER_TEXT.test(protocol)) {
+    throw new OpenReceiptError(
+      "INVALID_DEVICE_PROFILE",
+      "Device profiles require a safe non-empty protocol identifier.",
+    );
+  }
+
+  if (
+    candidate.capabilities === null ||
+    typeof candidate.capabilities !== "object" ||
+    Array.isArray(candidate.capabilities)
+  ) {
+    throw new OpenReceiptError(
+      "INVALID_DEVICE_PROFILE",
+      "Device profiles require a capabilities object.",
+      {
+        profileId: id,
+        receivedType: Array.isArray(candidate.capabilities)
+          ? "array"
+          : typeof candidate.capabilities,
+      },
     );
   }
 
   for (const capability of CAPABILITIES) {
-    const support = profile.capabilities[capability];
+    const support = candidate.capabilities[capability];
     if (!isCapabilitySupport(support)) {
       throw new OpenReceiptError(
         "INVALID_DEVICE_PROFILE",
         "Every device capability must be native, fallback, or unsupported.",
-        { profileId: profile.id, capability, support },
+        { profileId: id, capability, support },
       );
     }
   }
 
   let textEncodings: readonly string[] | undefined;
-  if (profile.textEncodings !== undefined) {
-    if (!Array.isArray(profile.textEncodings)) {
+  if (candidate.textEncodings !== undefined) {
+    if (!Array.isArray(candidate.textEncodings)) {
       throw new OpenReceiptError(
         "INVALID_DEVICE_PROFILE",
         "textEncodings must be an array when provided.",
-        { profileId: profile.id, receivedType: typeof profile.textEncodings },
+        { profileId: id, receivedType: typeof candidate.textEncodings },
       );
     }
 
-    textEncodings = profile.textEncodings.map((encoding, index) => {
+    textEncodings = candidate.textEncodings.map((encoding, index) => {
       if (typeof encoding !== "string") {
         throw new OpenReceiptError(
           "INVALID_DEVICE_PROFILE",
           "textEncodings entries must be text identifiers.",
-          { profileId: profile.id, encodingIndex: index, receivedType: typeof encoding },
+          { profileId: id, encodingIndex: index, receivedType: typeof encoding },
         );
       }
 
@@ -84,7 +126,7 @@ export function defineDeviceProfile(profile: DeviceProfile): DeviceProfile {
         throw new OpenReceiptError(
           "INVALID_DEVICE_PROFILE",
           "textEncodings entries must be safe non-empty text identifiers.",
-          { profileId: profile.id, encodingIndex: index },
+          { profileId: id, encodingIndex: index },
         );
       }
 
@@ -92,12 +134,34 @@ export function defineDeviceProfile(profile: DeviceProfile): DeviceProfile {
     });
   }
 
+  let notes: readonly string[] | undefined;
+  if (candidate.notes !== undefined) {
+    if (!Array.isArray(candidate.notes)) {
+      throw new OpenReceiptError(
+        "INVALID_DEVICE_PROFILE",
+        "Device profile notes must be an array when provided.",
+        { profileId: id, receivedType: typeof candidate.notes },
+      );
+    }
+
+    notes = candidate.notes.map((note, index) => {
+      if (typeof note !== "string") {
+        throw new OpenReceiptError(
+          "INVALID_DEVICE_PROFILE",
+          "Device profile notes must contain text values.",
+          { profileId: id, noteIndex: index, receivedType: typeof note },
+        );
+      }
+      return note;
+    });
+  }
+
   return Object.freeze({
-    id: profile.id,
-    protocol: profile.protocol,
-    capabilities: Object.freeze({ ...profile.capabilities }),
+    id,
+    protocol,
+    capabilities: Object.freeze({ ...candidate.capabilities }),
     ...(textEncodings ? { textEncodings: Object.freeze([...textEncodings]) } : {}),
-    ...(profile.notes ? { notes: Object.freeze([...profile.notes]) } : {}),
+    ...(notes ? { notes: Object.freeze([...notes]) } : {}),
   });
 }
 
