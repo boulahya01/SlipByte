@@ -47,16 +47,18 @@ export function selectTextRepresentation(
   const resolvedProfile = defineDeviceProfile(profile);
   const resolvedOptions = resolveOptions(options);
   const candidates = resolveNativeCandidates(resolvedOptions.nativeCandidates);
-  const configuredEncodingIds = new Set(resolvedProfile.textEncodings ?? []);
+  const candidatesById = new Map(candidates.map((candidate) => [candidate.id, candidate]));
   const allowRasterFallback = resolveRasterFallbackOption(
     resolvedOptions.allowRasterFallback,
   );
   const textCapability = resolveCapability(resolvedProfile, "text");
 
   if (textCapability.support === "native") {
-    for (const [index, candidate] of candidates.entries()) {
-      if (!configuredEncodingIds.has(candidate.id)) continue;
+    for (const encodingId of resolvedProfile.textEncodings ?? []) {
+      const candidate = candidatesById.get(encodingId);
+      if (!candidate) continue;
 
+      const candidateIndex = candidates.indexOf(candidate);
       let supported: unknown;
 
       try {
@@ -65,7 +67,7 @@ export function selectTextRepresentation(
         throw new OpenReceiptError(
           "TEXT_REPRESENTATION_FAILED",
           "A native text representation probe failed.",
-          { candidateIndex: index },
+          { candidateIndex },
         );
       }
 
@@ -73,7 +75,7 @@ export function selectTextRepresentation(
         throw new OpenReceiptError(
           "INVALID_TEXT_REPRESENTATION_OPTION",
           "Native text representation probes must return a boolean.",
-          { candidateIndex: index, receivedType: typeof supported },
+          { candidateIndex, receivedType: typeof supported },
         );
       }
 
@@ -129,6 +131,7 @@ function resolveNativeCandidates(
     );
   }
 
+  const seenIds = new Set<string>();
   const candidates = value.map((candidate, index) => {
     if (typeof candidate !== "object" || candidate === null) {
       throw new OpenReceiptError(
@@ -158,8 +161,18 @@ function resolveNativeCandidates(
       );
     }
 
+    const id = candidate.id.trim();
+    if (seenIds.has(id)) {
+      throw new OpenReceiptError(
+        "INVALID_TEXT_REPRESENTATION_OPTION",
+        "Native text representation candidate ids must be unique.",
+        { candidateIndex: index },
+      );
+    }
+    seenIds.add(id);
+
     return Object.freeze({
-      id: candidate.id.trim(),
+      id,
       canRepresent: candidate.canRepresent,
     });
   });
