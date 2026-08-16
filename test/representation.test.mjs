@@ -107,34 +107,40 @@ test("rejects malformed profile encoding allowlists before probing candidates", 
 });
 
 test("rejects unsafe device profile note metadata before probing candidates", () => {
-  let probed = false;
+  for (const unsafeNote of [
+    "fixture\u001b[31mspoof",
+    "fixture\nforged-line",
+    "fixture\rforged-line",
+  ]) {
+    let probed = false;
 
-  assert.throws(
-    () =>
-      selectTextRepresentation(
-        "secret receipt text",
-        profile({ notes: ["fixture\u001b[31mspoof"] }),
-        {
-          nativeCandidates: [
-            {
-              id: "ascii",
-              canRepresent() {
-                probed = true;
-                return true;
+    assert.throws(
+      () =>
+        selectTextRepresentation(
+          "secret receipt text",
+          profile({ notes: [unsafeNote] }),
+          {
+            nativeCandidates: [
+              {
+                id: "ascii",
+                canRepresent() {
+                  probed = true;
+                  return true;
+                },
               },
-            },
-          ],
-        },
-      ),
-    (error) =>
-      error instanceof OpenReceiptError &&
-      error.code === "INVALID_DEVICE_PROFILE" &&
-      error.details.noteIndex === 0 &&
-      !Object.values(error.details).includes("secret receipt text") &&
-      !Object.values(error.details).includes("fixture\u001b[31mspoof"),
-  );
+            ],
+          },
+        ),
+      (error) =>
+        error instanceof OpenReceiptError &&
+        error.code === "INVALID_DEVICE_PROFILE" &&
+        error.details.noteIndex === 0 &&
+        !Object.values(error.details).includes("secret receipt text") &&
+        !Object.values(error.details).includes(unsafeNote),
+    );
 
-  assert.equal(probed, false);
+    assert.equal(probed, false);
+  }
 });
 
 test("rejects malformed device profile shapes with structured errors before probing candidates", () => {
