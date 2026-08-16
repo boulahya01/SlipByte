@@ -148,7 +148,15 @@ test("rejects unsafe control characters in evidence text without echoing content
       support: "native",
       source: "hardware-test",
       reference: "bench-001",
-      notes: ["status\u001b[31m"],
+      observedAt: "2026-08-16\nforged-log-line",
+    },
+    {
+      profileId: "fixture-printer",
+      capability: "cut",
+      support: "native",
+      source: "hardware-test",
+      reference: "bench-001",
+      notes: ["status\rforged-log-line"],
     },
   ]) {
     assert.throws(
