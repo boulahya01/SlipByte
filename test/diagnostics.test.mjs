@@ -61,7 +61,7 @@ test("handles unknown failures conservatively", () => {
     stage: "unknown",
     summary: "The failure is not an OpenReceipt structured error.",
     retrySafety: "unknown",
-    delivery: "not-applicable",
+    delivery: "unknown",
     remediation: [
       "Inspect the original failure at the application boundary before retrying.",
     ],

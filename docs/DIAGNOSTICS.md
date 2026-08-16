@@ -20,7 +20,7 @@ A diagnostic contains:
 
 - `stage`: input, document, layout, capability, encoding, transport, or unknown
 - `retrySafety`: whether retry is meaningful and whether it is safe without confirming delivery
-- `delivery`: whether transport definitely did not start or the physical delivery outcome is uncertain
+- `delivery`: not applicable before transport, definitely not started, uncertain after transport begins, or unknown when the failure is outside OpenReceipt's structured error model
 - `remediation`: concise next actions based only on evidence OpenReceipt actually has
 
 Diagnostics deliberately do not copy `OpenReceiptError.details`, receipt text, encoded bytes, network credentials, or arbitrary thrown causes.
@@ -35,4 +35,4 @@ Transport success still does not prove that paper physically exited the printer.
 
 ## Unknown errors
 
-Non-OpenReceipt failures are classified conservatively as `stage: "unknown"` with unknown retry safety. The caller should inspect the original failure at its application boundary rather than guessing from a printer brand or protocol convention.
+Non-OpenReceipt failures are classified conservatively as `stage: "unknown"`, `retrySafety: "unknown"`, and `delivery: "unknown"`. The diagnostic layer cannot safely infer whether an arbitrary external failure happened before or after delivery began, so callers must inspect the original failure at the application boundary rather than guessing from a printer brand or protocol convention.

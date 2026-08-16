@@ -21,7 +21,8 @@ export type RetrySafety =
 export type DeliveryState =
   | "not-applicable"
   | "not-started"
-  | "uncertain";
+  | "uncertain"
+  | "unknown";
 
 export type OpenReceiptDiagnostic = Readonly<{
   code?: OpenReceiptErrorCode;
@@ -39,7 +40,7 @@ export function diagnoseError(error: unknown): OpenReceiptDiagnostic {
       "unknown",
       "The failure is not an OpenReceipt structured error.",
       "unknown",
-      "not-applicable",
+      "unknown",
       ["Inspect the original failure at the application boundary before retrying."],
     );
   }
