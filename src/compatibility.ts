@@ -37,7 +37,6 @@ export function defineCapabilityEvidence(evidence: unknown): CapabilityEvidence 
 
   if (!isPrinterCapability(candidate.capability)) {
     throw invalidEvidence("Compatibility evidence capability is invalid.", {
-      profileId,
       field: "capability",
       receivedType: typeof candidate.capability,
     });
@@ -45,7 +44,6 @@ export function defineCapabilityEvidence(evidence: unknown): CapabilityEvidence 
 
   if (!isCapabilitySupport(candidate.support)) {
     throw invalidEvidence("Compatibility evidence support state is invalid.", {
-      profileId,
       field: "support",
       receivedType: typeof candidate.support,
     });
@@ -53,7 +51,6 @@ export function defineCapabilityEvidence(evidence: unknown): CapabilityEvidence 
 
   if (!isEvidenceSource(candidate.source)) {
     throw invalidEvidence("Compatibility evidence source is invalid.", {
-      profileId,
       field: "source",
       receivedType: typeof candidate.source,
     });
@@ -94,7 +91,6 @@ export function findCapabilityEvidence(
   const profileId = requireText(candidate.profileId, "profileId");
   if (!isPrinterCapability(candidate.capability)) {
     throw invalidEvidence("Compatibility evidence query capability is invalid.", {
-      profileId,
       field: "capability",
       receivedType: typeof candidate.capability,
     });
