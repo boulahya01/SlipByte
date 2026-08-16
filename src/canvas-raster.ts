@@ -67,7 +67,13 @@ export function createCanvasRasterTextRenderer(
         throw renderFailure("Canvas surface factory returned an invalid surface.", resolved.id);
       }
 
-      const context = surface.getContext("2d");
+      let context: Canvas2DContextLike | null;
+      try {
+        context = surface.getContext("2d");
+      } catch {
+        throw renderFailure("Canvas 2D context acquisition failed.", resolved.id);
+      }
+
       if (!context) {
         throw renderFailure("Canvas surface does not provide a 2D context.", resolved.id);
       }
@@ -78,7 +84,7 @@ export function createCanvasRasterTextRenderer(
         context.font = resolved.font;
         context.fillStyle = "#000000";
         context.textBaseline = "top";
-        if ("direction" in context) context.direction = resolved.direction;
+        context.direction = resolved.direction;
         context.fillText(text, resolved.x, resolved.y);
       } catch {
         throw renderFailure("Canvas text drawing failed.", resolved.id);
@@ -91,7 +97,13 @@ export function createCanvasRasterTextRenderer(
         throw renderFailure("Canvas pixel readback failed.", resolved.id);
       }
 
-      return rgbaToRaster(imageData, resolved.threshold, resolved.id);
+      return rgbaToRaster(
+        imageData,
+        resolved.width,
+        resolved.height,
+        resolved.threshold,
+        resolved.id,
+      );
     },
   });
 }
@@ -109,6 +121,15 @@ function resolveOptions(options: CanvasRasterTextOptions): Required<CanvasRaster
   const font = requireSafeText(options.font, "font");
   const width = requirePositiveInteger(options.width, "width");
   const height = requirePositiveInteger(options.height, "height");
+  const expectedRgbaLength = width * height * 4;
+  if (!Number.isSafeInteger(expectedRgbaLength)) {
+    throw new OpenReceiptError(
+      "INVALID_RASTER_RENDERER",
+      "Canvas raster renderer dimensions are too large.",
+      { width, height },
+    );
+  }
+
   const x = options.x === undefined ? 0 : requireFiniteNumber(options.x, "x");
   const y = options.y === undefined ? 0 : requireFiniteNumber(options.y, "y");
   const direction = options.direction ?? "inherit";
@@ -125,18 +146,34 @@ function resolveOptions(options: CanvasRasterTextOptions): Required<CanvasRaster
 
 function rgbaToRaster(
   imageData: CanvasImageDataLike,
+  expectedWidth: number,
+  expectedHeight: number,
   threshold: number,
   rendererId: string,
 ): RasterImage {
   if (
     typeof imageData !== "object" ||
     imageData === null ||
-    !Number.isInteger(imageData.width) ||
+    !Number.isSafeInteger(imageData.width) ||
     imageData.width < 1 ||
-    !Number.isInteger(imageData.height) ||
+    !Number.isSafeInteger(imageData.height) ||
     imageData.height < 1
   ) {
     throw renderFailure("Canvas returned invalid image data dimensions.", rendererId);
+  }
+
+  if (imageData.width !== expectedWidth || imageData.height !== expectedHeight) {
+    throw new OpenReceiptError(
+      "RASTER_RENDER_FAILED",
+      "Canvas returned image data with unexpected dimensions.",
+      {
+        rendererId,
+        expectedWidth,
+        expectedHeight,
+        receivedWidth: imageData.width,
+        receivedHeight: imageData.height,
+      },
+    );
   }
 
   const expectedRgbaLength = imageData.width * imageData.height * 4;
@@ -191,10 +228,10 @@ function requireSafeText(value: unknown, field: string): string {
 }
 
 function requirePositiveInteger(value: unknown, field: string): number {
-  if (typeof value !== "number" || !Number.isInteger(value) || value < 1) {
+  if (typeof value !== "number" || !Number.isSafeInteger(value) || value < 1) {
     throw new OpenReceiptError(
       "INVALID_RASTER_RENDERER",
-      `Canvas raster renderer ${field} must be a positive integer.`,
+      `Canvas raster renderer ${field} must be a positive safe integer.`,
       { field, receivedType: typeof value },
     );
   }
