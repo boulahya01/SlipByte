@@ -26,31 +26,36 @@ OpenReceipt is in early development. The repository is intended to be developed 
 - custom validated paper profiles
 - explicit `wrap`, `truncate`, and `error` overflow policies
 - grapheme-aware default text measurement with an injectable device-width model
-- initial device profile and capability model
-- explicit `native`, `fallback`, and `unsupported` capability states
+- device profile and capability model with explicit `native`, `fallback`, and `unsupported` states
+- provenance-aware compatibility evidence contracts that preserve conflicting/unknown evidence
 - capability-aware ESC/POS byte encoder with deterministic fixtures
-- strict default ASCII encoding plus injectable device-specific text encoders
+- profile-scoped ESC/POS text-encoding configuration instead of global code-page assumptions
 - raw TCP transport with explicit endpoint configuration, stage-specific timeouts, safe close/abort behavior, and no blind retries
-- structured OpenReceipt errors
-- input validation and unsafe control-character rejection in normal text fields
+- hardware-free mock printing and deterministic text preview
+- structured diagnostics with explicit retry-safety and delivery-state semantics
+- native-text versus raster representation selection
+- canonical packed monochrome raster-image contract
+- explicit ESC/POS raster strategy boundary; no universal graphics command is assumed
+- Canvas2D Unicode-to-raster adapter with explicit RTL/LTR direction and deterministic monochrome conversion
+- input/runtime validation designed to avoid leaking receipt content through structured diagnostics
 - public contribution, security, support, and maintainer policies
 
 ### Active work
 
-- mock printer and hardware-free preview workflow
-- capability/profile contract hardening before broad compatibility data is added
-- diagnostics and end-to-end failure semantics
+- real Canvas runtime/font conformance for Arabic/RTL, CJK, combining marks, emoji, and mixed-script raster fallback
+- GitHub Actions startup blocker investigation and release-quality CI restoration
+- v0.1 package/release hardening and real physical-printer validation
 
-### Planned v0.1 path
+### Remaining v0.1 path
 
-- practical USB transport
-- structured diagnostics across protocol, transport, and device feedback
-- QR codes, barcodes, images, cut, and cash-drawer handling through explicit capabilities
-- compatibility fixtures and evidence-based device profiles
-- arbitrary Unicode native/raster fallback strategy
-- CI/release hardening
-- real physical-printer validation
-- first npm release
+- finish Unicode raster conformance with evidence from an actual text-rendering runtime/font configuration
+- restore normal CI execution and run exact release-head checks
+- audit package contents and reproducible install/release behavior
+- validate the end-to-end path on physical thermal printers with exact model/environment evidence
+- complete the public-release audit
+- publish the first npm release only after explicit maintainer authorization
+
+USB, serial, Bluetooth, operating-system printer queues, and broader hardware adapters remain post-v0.1 expansion areas unless evidence forces a reprioritization.
 
 The project does **not** currently claim broad physical-printer compatibility.
 
@@ -75,6 +80,8 @@ Application / AI coding agent
             ↓
       Device profile
             ↓
+ Representation selection
+            ↓
       Protocol encoder
             ↓
         Transport
@@ -88,7 +95,7 @@ See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the layer boundaries.
 
 ## Current API foundation
 
-The implemented lower-level path now covers document construction, layout, ESC/POS encoding, and raw TCP delivery. The complete high-level printer API shown below is still the target developer experience, **not a released API**:
+The implemented lower-level path now covers document construction, layout, capability resolution, preview/mock output, native/raster representation selection, ESC/POS encoding, diagnostics, and raw TCP delivery. The complete high-level printer API shown below is still the target developer experience, **not a released API**:
 
 ```ts
 import { createPrinter, receipt, tcp } from "openreceipt";
@@ -125,7 +132,7 @@ Do not depend on unreleased names from target examples until they exist in the e
 
 ## Capability model
 
-The initial capability/profile layer is implemented. Application and encoder code can reason about explicit capabilities instead of branching on printer brands.
+The capability/profile layer is implemented. Application and encoder code can reason about explicit capabilities instead of branching on printer brands.
 
 Current support states are:
 
@@ -135,9 +142,24 @@ fallback
 unsupported
 ```
 
-The current contract still requires explicit support data for each declared capability. Missing external evidence must not be silently converted into a compatibility claim; unknown-evidence handling will be hardened before a broad compatibility database is treated as authoritative.
+Compatibility evidence is stored separately from `DeviceProfile` behavior. Missing evidence remains unknown, contradictory observations remain visible, and a printer brand or generic `ESC/POS compatible` label is never promoted into a support claim automatically.
 
-See [`docs/CAPABILITIES.md`](docs/CAPABILITIES.md).
+See [`docs/CAPABILITIES.md`](docs/CAPABILITIES.md) and [`docs/COMPATIBILITY.md`](docs/COMPATIBILITY.md).
+
+## Unicode and raster fallback
+
+OpenReceipt now has an explicit representation boundary:
+
+```text
+Unicode layout
+→ native encoding when explicitly profile-configured and representable
+→ otherwise explicit raster fallback when capability policy allows it
+→ otherwise fail before transport
+```
+
+The generic raster contract is protocol-independent. A Canvas2D adapter can shape/render Unicode through an injected graphics runtime and convert the resulting RGBA pixels into the canonical 1-bit bitmap format. Actual glyph coverage, shaping, bidi behavior, and emoji support remain properties of the selected runtime and fonts and must be validated rather than assumed.
+
+See [`docs/TEXT_REPRESENTATION.md`](docs/TEXT_REPRESENTATION.md), [`docs/RASTER.md`](docs/RASTER.md), and [`docs/CANVAS_RASTER.md`](docs/CANVAS_RASTER.md).
 
 ## For AI coding agents
 
@@ -162,16 +184,23 @@ See [`docs/MAINTAINER_GUIDE.md`](docs/MAINTAINER_GUIDE.md) and [`docs/ROADMAP.md
 
 ## CI status
 
-GitHub Actions currently has a startup/infrastructure blocker tracked in issue #8. A workflow that never starts is **not** treated as passing CI. Local or contract validation may support development while that infrastructure issue is isolated, but CI remains a release-quality gate before the first npm release.
+GitHub Actions currently has a startup/infrastructure blocker tracked in issue #8. A workflow that never starts is **not** treated as passing CI. Focused executable validation may support development while that infrastructure issue is isolated, but functioning CI remains a release-quality gate before the first npm release.
 
 ## Documentation
 
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — architecture boundaries
 - [`docs/PRINT_DOCUMENT.md`](docs/PRINT_DOCUMENT.md) — versioned print-document contract
 - [`docs/LAYOUT.md`](docs/LAYOUT.md) — deterministic layout contract
-- [`docs/CAPABILITIES.md`](docs/CAPABILITIES.md) — current capability/profile model
+- [`docs/CAPABILITIES.md`](docs/CAPABILITIES.md) — capability/profile model
+- [`docs/COMPATIBILITY.md`](docs/COMPATIBILITY.md) — provenance-aware compatibility evidence
 - [`docs/ESC_POS.md`](docs/ESC_POS.md) — ESC/POS encoder contract
+- [`docs/ESC_POS_TEXT_ENCODING.md`](docs/ESC_POS_TEXT_ENCODING.md) — profile-scoped text/code-page configuration
+- [`docs/TEXT_REPRESENTATION.md`](docs/TEXT_REPRESENTATION.md) — native/raster selection rules
+- [`docs/RASTER.md`](docs/RASTER.md) — canonical raster image and protocol adapter boundary
+- [`docs/CANVAS_RASTER.md`](docs/CANVAS_RASTER.md) — Canvas2D Unicode raster adapter
 - [`docs/TCP.md`](docs/TCP.md) — raw TCP transport contract and failure semantics
+- [`docs/PREVIEW.md`](docs/PREVIEW.md) — mock printer and deterministic preview
+- [`docs/DIAGNOSTICS.md`](docs/DIAGNOSTICS.md) — structured failure and retry-safety model
 - [`docs/ROADMAP.md`](docs/ROADMAP.md) — v0.1 engineering sequence
 - [`docs/MAINTAINER_GUIDE.md`](docs/MAINTAINER_GUIDE.md) — public engineering standards
 - [`docs/PUBLIC_RELEASE_CHECKLIST.md`](docs/PUBLIC_RELEASE_CHECKLIST.md) — public-development and npm-release gates
