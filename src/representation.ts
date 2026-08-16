@@ -40,9 +40,10 @@ export function selectTextRepresentation(
     );
   }
 
-  const candidates = resolveNativeCandidates(options.nativeCandidates);
+  const resolvedOptions = resolveOptions(options);
+  const candidates = resolveNativeCandidates(resolvedOptions.nativeCandidates);
   const allowRasterFallback = resolveRasterFallbackOption(
-    options.allowRasterFallback,
+    resolvedOptions.allowRasterFallback,
   );
   const textCapability = resolveCapability(profile, "text");
 
@@ -95,6 +96,17 @@ export function selectTextRepresentation(
       rasterFallbackAllowed: allowRasterFallback,
     },
   );
+}
+
+function resolveOptions(value: TextRepresentationOptions): TextRepresentationOptions {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    throw new OpenReceiptError(
+      "INVALID_TEXT_REPRESENTATION_OPTION",
+      "Text representation options must be an object.",
+      { receivedType: Array.isArray(value) ? "array" : typeof value },
+    );
+  }
+  return value;
 }
 
 function resolveNativeCandidates(
