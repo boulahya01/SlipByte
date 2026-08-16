@@ -63,6 +63,8 @@ The selected profile and encoder decide whether an operation is native, uses a d
 
 `defineDeviceProfile(profile)` validates and freezes profile data.
 
+At runtime it rejects non-object profiles, malformed identifiers, missing/malformed capability maps, non-array encoding/notes fields, non-text encoding/notes entries, and unsafe control characters in profile or protocol identifiers. Profile id, protocol id, and text-encoding identifiers are normalized by trimming surrounding whitespace before the immutable snapshot is returned. Invalid inputs fail with `INVALID_DEVICE_PROFILE` rather than leaking raw JavaScript `TypeError` failures across the public boundary.
+
 `resolveCapability(profile, capability)` returns:
 
 ```ts
