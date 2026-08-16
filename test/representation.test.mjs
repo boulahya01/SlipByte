@@ -45,6 +45,37 @@ test("selects the first profile-declared native encoding that can represent the 
   assert.equal(Object.isFrozen(selection), true);
 });
 
+test("uses device profile encoding order instead of caller candidate order", () => {
+  const selection = selectTextRepresentation(
+    "Cafe 123",
+    profile({ textEncodings: ["preferred", "secondary"] }),
+    {
+      nativeCandidates: [
+        { id: "secondary", canRepresent: () => true },
+        { id: "preferred", canRepresent: () => true },
+      ],
+    },
+  );
+
+  assert.deepEqual(selection, { kind: "native", encodingId: "preferred" });
+});
+
+test("rejects duplicate normalized native candidate ids", () => {
+  assert.throws(
+    () =>
+      selectTextRepresentation("Cafe", profile(), {
+        nativeCandidates: [
+          { id: "ascii", canRepresent: () => true },
+          { id: " ascii ", canRepresent: () => true },
+        ],
+      }),
+    (error) =>
+      error instanceof OpenReceiptError &&
+      error.code === "INVALID_TEXT_REPRESENTATION_OPTION" &&
+      error.details.candidateIndex === 1,
+  );
+});
+
 test("does not probe or select a native candidate omitted from the profile encoding allowlist", () => {
   let probed = false;
 
