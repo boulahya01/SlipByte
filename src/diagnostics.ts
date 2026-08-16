@@ -95,6 +95,16 @@ export function diagnoseError(error: unknown): OpenReceiptDiagnostic {
         ["Review the device profile and requested capability before printing."],
       );
 
+    case "INVALID_COMPATIBILITY_EVIDENCE":
+      return diagnostic(
+        error.code,
+        "capability",
+        "Compatibility evidence is malformed or incomplete.",
+        "not-applicable",
+        "not-applicable",
+        ["Correct the evidence record before using it for compatibility decisions."],
+      );
+
     case "UNSUPPORTED_PROTOCOL":
     case "INVALID_ENCODER_OPTION":
     case "TEXT_ENCODING_FAILED":

@@ -19,6 +19,12 @@ export type {
   PrinterCapabilities,
   PrinterCapability,
 } from "./capabilities.js";
+export { defineCapabilityEvidence, findCapabilityEvidence } from "./compatibility.js";
+export type {
+  CapabilityEvidence,
+  CapabilityEvidenceQuery,
+  CompatibilityEvidenceSource,
+} from "./compatibility.js";
 export {
   createPrintDocument,
   deserializePrintDocument,
