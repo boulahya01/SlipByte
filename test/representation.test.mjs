@@ -106,6 +106,51 @@ test("rejects malformed profile encoding allowlists before probing candidates", 
   }
 });
 
+test("rejects malformed device profile shapes with structured errors before probing candidates", () => {
+  for (const malformedProfile of [
+    null,
+    [],
+    { id: 42, protocol: "escpos", capabilities: capabilities() },
+    { id: "fixture", protocol: 42, capabilities: capabilities() },
+    { id: "fixture", protocol: "escpos", capabilities: null },
+    { id: "bad\nprofile", protocol: "escpos", capabilities: capabilities() },
+    { id: "fixture", protocol: "bad\rprotocol", capabilities: capabilities() },
+  ]) {
+    let probed = false;
+
+    assert.throws(
+      () =>
+        selectTextRepresentation("secret receipt text", malformedProfile, {
+          nativeCandidates: [
+            {
+              id: "ascii",
+              canRepresent() {
+                probed = true;
+                return true;
+              },
+            },
+          ],
+        }),
+      (error) =>
+        error instanceof OpenReceiptError &&
+        error.code === "INVALID_DEVICE_PROFILE" &&
+        !Object.values(error.details).includes("secret receipt text"),
+    );
+
+    assert.equal(probed, false);
+  }
+});
+
+test("normalizes safe device profile identifiers before representation selection", () => {
+  const selection = selectTextRepresentation(
+    "ASCII",
+    profile({ id: " fixture-printer ", protocol: " escpos ", textEncodings: [" ascii "] }),
+    { nativeCandidates: [asciiCandidate] },
+  );
+
+  assert.deepEqual(selection, { kind: "native", encodingId: "ascii" });
+});
+
 test("uses explicit raster fallback for non-native conformance inputs", () => {
   const rasterProfile = profile({
     capabilities: capabilities({ raster: "native" }),
