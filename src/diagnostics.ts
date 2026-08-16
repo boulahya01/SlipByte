@@ -117,6 +117,19 @@ export function diagnoseError(error: unknown): OpenReceiptDiagnostic {
         ["Review native encoding candidates and explicit raster fallback capability before transport."],
       );
 
+    case "INVALID_RASTER_IMAGE":
+    case "INVALID_RASTER_RENDERER":
+    case "RASTER_RENDER_FAILED":
+    case "RASTER_ENCODING_FAILED":
+      return diagnostic(
+        error.code,
+        "encoding",
+        "Raster fallback could not produce valid printer image bytes.",
+        "not-applicable",
+        "not-applicable",
+        ["Review the raster renderer, image dimensions, and explicit protocol raster strategy."],
+      );
+
     case "UNSUPPORTED_PROTOCOL":
     case "INVALID_ENCODER_OPTION":
     case "TEXT_ENCODING_FAILED":
