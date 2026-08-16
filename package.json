@@ -21,7 +21,9 @@
     "typecheck": "tsc --noEmit",
     "test": "npm run build && node --test test/*.test.mjs",
     "check": "npm run typecheck && npm test",
-    "prepublishOnly": "npm run check"
+    "check:package": "npm run build && node scripts/verify-package.mjs",
+    "release:check": "npm run check && npm run check:package",
+    "prepublishOnly": "npm run release:check"
   },
   "engines": {
     "node": ">=20"
