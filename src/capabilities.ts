@@ -98,7 +98,11 @@ export function defineDeviceProfile(profile: DeviceProfile): DeviceProfile {
       throw new OpenReceiptError(
         "INVALID_DEVICE_PROFILE",
         "Every device capability must be native, fallback, or unsupported.",
-        { profileId: id, capability, support },
+        {
+          profileId: id,
+          capability,
+          receivedType: Array.isArray(support) ? "array" : typeof support,
+        },
       );
     }
   }
