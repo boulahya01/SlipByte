@@ -7,105 +7,115 @@ const npmCommand = process.platform === "win32" ? "npm.cmd" : "npm";
 const nodeCommand = process.execPath;
 const typescriptCli = join(process.cwd(), "node_modules", "typescript", "bin", "tsc");
 
-const dryRun = run(npmCommand, [
-  "pack",
-  "--dry-run",
-  "--json",
-  "--ignore-scripts",
-]);
-const dryRunReport = parsePackReport(dryRun.stdout);
-verifyPackageShape(dryRunReport);
-
-const tempRoot = mkdtempSync(join(tmpdir(), "openreceipt-package-"));
 try {
-  const packed = run(npmCommand, [
+  verifyPackage();
+} catch (error) {
+  const message = error instanceof Error ? error.message : "Unknown package verification failure.";
+  console.error(`Package verification failed: ${message}`);
+  process.exitCode = 1;
+}
+
+function verifyPackage() {
+  const dryRun = run(npmCommand, [
     "pack",
+    "--dry-run",
     "--json",
     "--ignore-scripts",
-    "--pack-destination",
-    tempRoot,
   ]);
-  const packedReport = parsePackReport(packed.stdout);
-  verifyPackageShape(packedReport);
+  const dryRunReport = parsePackReport(dryRun.stdout);
+  verifyPackageShape(dryRunReport);
 
-  if (typeof packedReport.filename !== "string" || !packedReport.filename.endsWith(".tgz")) {
-    fail("npm pack did not report a valid tarball filename.");
-  }
-
-  const consumerDir = join(tempRoot, "consumer");
-  mkdirSync(consumerDir);
-  writeFileSync(
-    join(consumerDir, "package.json"),
-    JSON.stringify({ private: true, type: "module" }),
-  );
-
-  run(
-    npmCommand,
-    [
-      "install",
+  const tempRoot = mkdtempSync(join(tmpdir(), "openreceipt-package-"));
+  try {
+    const packed = run(npmCommand, [
+      "pack",
+      "--json",
       "--ignore-scripts",
-      "--no-audit",
-      "--no-fund",
-      join(tempRoot, packedReport.filename),
-    ],
-    consumerDir,
-  );
+      "--pack-destination",
+      tempRoot,
+    ]);
+    const packedReport = parsePackReport(packed.stdout);
+    verifyPackageShape(packedReport);
 
-  run(
-    nodeCommand,
-    [
-      "--input-type=module",
-      "--eval",
+    if (typeof packedReport.filename !== "string" || !packedReport.filename.endsWith(".tgz")) {
+      fail("npm pack did not report a valid tarball filename.");
+    }
+
+    const consumerDir = join(tempRoot, "consumer");
+    mkdirSync(consumerDir);
+    writeFileSync(
+      join(consumerDir, "package.json"),
+      JSON.stringify({ private: true, type: "module" }),
+    );
+
+    run(
+      npmCommand,
       [
-        'import * as openreceipt from "openreceipt";',
-        'for (const name of ["receipt", "layoutReceipt", "createPrintDocument", "encodeEscPos", "sendTcp", "mockPrint", "diagnoseError"]) {',
-        '  if (typeof openreceipt[name] !== "function") throw new Error(`Missing package export: ${name}`);',
-        "}",
-        'const document = openreceipt.receipt().title("My Store").item("Coffee", 2, 30).total("TOTAL", 60).cut().toDocument();',
-        'const result = openreceipt.mockPrint(document, { paper: "80mm" });',
-        'for (const expected of ["My Store", "Coffee", "TOTAL", "60.00", "[cut]"]) {',
-        '  if (!result.preview.includes(expected)) throw new Error(`Installed-package preview is missing: ${expected}`);',
-        "}",
-        'if (result.layout.paper.id !== "80mm") throw new Error("Installed-package smoke test used the wrong paper profile.");',
+        "install",
+        "--ignore-scripts",
+        "--no-audit",
+        "--no-fund",
+        join(tempRoot, packedReport.filename),
+      ],
+      consumerDir,
+    );
+
+    run(
+      nodeCommand,
+      [
+        "--input-type=module",
+        "--eval",
+        [
+          'import * as openreceipt from "openreceipt";',
+          'for (const name of ["receipt", "layoutReceipt", "createPrintDocument", "encodeEscPos", "sendTcp", "mockPrint", "diagnoseError"]) {',
+          '  if (typeof openreceipt[name] !== "function") throw new Error(`Missing package export: ${name}`);',
+          "}",
+          'const document = openreceipt.receipt().title("My Store").item("Coffee", 2, 30).total("TOTAL", 60).cut().toDocument();',
+          'const result = openreceipt.mockPrint(document, { paper: "80mm" });',
+          'for (const expected of ["My Store", "Coffee", "TOTAL", "60.00", "[cut]"]) {',
+          '  if (!result.preview.includes(expected)) throw new Error(`Installed-package preview is missing: ${expected}`);',
+          "}",
+          'if (result.layout.paper.id !== "80mm") throw new Error("Installed-package smoke test used the wrong paper profile.");',
+        ].join("\n"),
+      ],
+      consumerDir,
+    );
+
+    writeFileSync(
+      join(consumerDir, "consumer-smoke.ts"),
+      [
+        'import { mockPrint, receipt, type MockPrintResult, type ReceiptDocument } from "openreceipt";',
+        'const document: ReceiptDocument = receipt().title("Type check").total("TOTAL", 1).toDocument();',
+        'const result: MockPrintResult = mockPrint(document, { paper: "58mm" });',
+        'const preview: string = result.preview;',
+        'const paperId: string = result.layout.paper.id;',
+        'void [preview, paperId];',
       ].join("\n"),
-    ],
-    consumerDir,
-  );
+    );
 
-  writeFileSync(
-    join(consumerDir, "consumer-smoke.ts"),
-    [
-      'import { mockPrint, receipt, type MockPrintResult, type ReceiptDocument } from "openreceipt";',
-      'const document: ReceiptDocument = receipt().title("Type check").total("TOTAL", 1).toDocument();',
-      'const result: MockPrintResult = mockPrint(document, { paper: "58mm" });',
-      'const preview: string = result.preview;',
-      'const paperId: string = result.layout.paper.id;',
-      'void [preview, paperId];',
-    ].join("\n"),
-  );
+    run(
+      nodeCommand,
+      [
+        typescriptCli,
+        "--noEmit",
+        "--strict",
+        "--target",
+        "ES2022",
+        "--module",
+        "NodeNext",
+        "--moduleResolution",
+        "NodeNext",
+        "consumer-smoke.ts",
+      ],
+      consumerDir,
+    );
 
-  run(
-    nodeCommand,
-    [
-      typescriptCli,
-      "--noEmit",
-      "--strict",
-      "--target",
-      "ES2022",
-      "--module",
-      "NodeNext",
-      "--moduleResolution",
-      "NodeNext",
-      "consumer-smoke.ts",
-    ],
-    consumerDir,
-  );
-
-  console.log(
-    `Package artifact verified, importable, and type-checkable: ${packedReport.files.length} files, ${packedReport.size ?? "unknown"} packed bytes.`,
-  );
-} finally {
-  rmSync(tempRoot, { recursive: true, force: true });
+    console.log(
+      `Package artifact verified, importable, and type-checkable: ${packedReport.files.length} files, ${packedReport.size ?? "unknown"} packed bytes.`,
+    );
+  } finally {
+    rmSync(tempRoot, { recursive: true, force: true });
+  }
 }
 
 function run(command, args, cwd = process.cwd()) {
@@ -176,6 +186,5 @@ function verifyPackageShape(packageReport) {
 }
 
 function fail(message) {
-  console.error(`Package verification failed: ${message}`);
-  process.exit(1);
+  throw new Error(message);
 }
