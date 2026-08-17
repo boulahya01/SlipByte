@@ -36,6 +36,7 @@ function verifyPackage() {
     ]);
     const packedReport = parsePackReport(packed.stdout);
     verifyPackageShape(packedReport);
+    const packageName = requirePackageName(packedReport);
 
     if (typeof packedReport.filename !== "string" || !packedReport.filename.endsWith(".tgz")) {
       fail("npm pack did not report a valid tarball filename.");
@@ -66,7 +67,7 @@ function verifyPackage() {
         "--input-type=module",
         "--eval",
         [
-          'import * as openreceipt from "openreceipt";',
+          `import * as openreceipt from ${JSON.stringify(packageName)};`,
           'for (const name of ["receipt", "layoutReceipt", "createPrintDocument", "encodeEscPos", "sendTcp", "mockPrint", "diagnoseError"]) {',
           '  if (typeof openreceipt[name] !== "function") throw new Error(`Missing package export: ${name}`);',
           "}",
@@ -84,7 +85,7 @@ function verifyPackage() {
     writeFileSync(
       join(consumerDir, "consumer-smoke.ts"),
       [
-        'import { mockPrint, receipt, type MockPrintResult, type ReceiptDocument } from "openreceipt";',
+        `import { mockPrint, receipt, type MockPrintResult, type ReceiptDocument } from ${JSON.stringify(packageName)};`,
         'const document: ReceiptDocument = receipt().title("Type check").total("TOTAL", 1).toDocument();',
         'const result: MockPrintResult = mockPrint(document, { paper: "58mm" });',
         'const preview: string = result.preview;',
@@ -150,6 +151,14 @@ function parsePackReport(output) {
   }
 
   return report[0];
+}
+
+function requirePackageName(packageReport) {
+  if (typeof packageReport.name !== "string" || !packageReport.name.trim()) {
+    fail("npm pack did not report a valid package name.");
+  }
+
+  return packageReport.name;
 }
 
 function verifyPackageShape(packageReport) {
