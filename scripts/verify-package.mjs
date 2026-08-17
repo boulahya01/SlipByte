@@ -5,6 +5,7 @@ import { join } from "node:path";
 
 const npmCommand = process.platform === "win32" ? "npm.cmd" : "npm";
 const nodeCommand = process.execPath;
+const typescriptCli = join(process.cwd(), "node_modules", "typescript", "bin", "tsc");
 
 const dryRun = run(npmCommand, [
   "pack",
@@ -71,8 +72,37 @@ try {
     consumerDir,
   );
 
+  writeFileSync(
+    join(consumerDir, "consumer-smoke.ts"),
+    [
+      'import { mockPrint, receipt, type MockPrintResult, type ReceiptDocument } from "openreceipt";',
+      'const document: ReceiptDocument = receipt().title("Type check").total("TOTAL", 1).toDocument();',
+      'const result: MockPrintResult = mockPrint(document, { paper: "58mm" });',
+      'const preview: string = result.preview;',
+      'const paperId: string = result.layout.paper.id;',
+      'void [preview, paperId];',
+    ].join("\n"),
+  );
+
+  run(
+    nodeCommand,
+    [
+      typescriptCli,
+      "--noEmit",
+      "--strict",
+      "--target",
+      "ES2022",
+      "--module",
+      "NodeNext",
+      "--moduleResolution",
+      "NodeNext",
+      "consumer-smoke.ts",
+    ],
+    consumerDir,
+  );
+
   console.log(
-    `Package artifact verified and importable: ${packedReport.files.length} files, ${packedReport.size ?? "unknown"} packed bytes.`,
+    `Package artifact verified, importable, and type-checkable: ${packedReport.files.length} files, ${packedReport.size ?? "unknown"} packed bytes.`,
   );
 } finally {
   rmSync(tempRoot, { recursive: true, force: true });
