@@ -17,6 +17,8 @@ Application / AI coding agent
             ↓
       Device profile
             ↓
+  Representation selection
+            ↓
       Protocol encoder
             ↓
         Transport
@@ -87,9 +89,25 @@ Application code should request capabilities rather than branch on brands.
 
 Compatibility claims must be evidence-based. A brand name or `ESC/POS compatible` label is not enough to claim support for every capability.
 
-## 4. Protocol encoder
+## 4. Representation selection
 
-The encoder translates laid-out operations into a printer/device protocol.
+Representation selection decides how laid-out content should be represented **before** protocol-specific bytes are emitted.
+
+For text, the current contract can select:
+
+- native text when the device profile explicitly permits a configured encoding and that candidate can represent the complete text run;
+- raster fallback when native text is unsafe or insufficient and raster fallback is explicitly allowed by capability policy;
+- a structured failure when neither representation is safe.
+
+This boundary does not contain ESC/POS code-page command values or a universal raster command. Protocol adapters remain responsible for mapping representation intent to reviewed protocol/device configuration.
+
+Unicode shaping, bidi behavior, glyph coverage, and emoji rendering are properties of the configured text-rendering runtime and fonts. The Canvas2D adapter is one injected rendering path; it does not turn a successful software render into a physical-printer compatibility claim.
+
+See [`TEXT_REPRESENTATION.md`](TEXT_REPRESENTATION.md), [`RASTER.md`](RASTER.md), and [`CANVAS_RASTER.md`](CANVAS_RASTER.md).
+
+## 5. Protocol encoder
+
+The encoder translates laid-out operations and selected representations into a printer/device protocol.
 
 First protocol target: ESC/POS.
 
@@ -104,17 +122,15 @@ Encoders:
 
 Future encoders can be added without changing receipt-building code when the same print intent is meaningful for them.
 
-## 5. Transport
+## 6. Transport
 
 A transport moves encoded data and, where supported, reads responses.
 
-Initial targets:
-
-- TCP;
-- USB where practical.
+The v0.1 transport path is raw TCP. USB is intentionally deferred from the v0.1 core unless hardware evidence forces reprioritization.
 
 Future transports may include:
 
+- USB;
 - serial;
 - operating-system print queues;
 - local print agents;
@@ -122,7 +138,7 @@ Future transports may include:
 
 Adding a transport must not require changing document/layout logic.
 
-## 6. Capability model
+## 7. Capability model
 
 Capabilities are the boundary between application intent and real hardware support.
 
@@ -149,7 +165,7 @@ if brand == XPrinter ...
 
 from spreading through user applications.
 
-## 7. Fallback model
+## 8. Fallback model
 
 Fallbacks must be explicit, safe, and observable.
 
@@ -173,7 +189,7 @@ Examples include rasterizing text/images when native device encoding is insuffic
 
 A fallback should never silently corrupt user content.
 
-## 8. Failure and diagnostics model
+## 9. Failure and diagnostics model
 
 Expected failures use structured error codes and useful metadata.
 
@@ -195,7 +211,7 @@ A low-level system error may be preserved as a cause, but application developers
 
 Diagnostics must avoid leaking receipt data, credentials, device secrets, or network secrets by default.
 
-## 9. AI-agent design requirement
+## 10. AI-agent design requirement
 
 Public types and documentation are part of the executable product contract.
 

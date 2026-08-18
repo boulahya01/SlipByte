@@ -21,18 +21,20 @@
     "typecheck": "tsc --noEmit",
     "test": "npm run build && node --test test/*.test.mjs",
     "check": "npm run typecheck && npm test",
-    "conformance:unicode": "npm run build && node scripts/unicode-raster-conformance.mjs",
-    "prepublishOnly": "npm run check"
+    "check:package": "npm run build && node scripts/verify-package.mjs",
+    "release:check": "npm run check && npm run check:package",
+    "prepublishOnly": "npm run release:check",
+    "conformance:unicode": "npm run build && node scripts/unicode-raster-conformance.mjs"
   },
   "engines": {
-    "node": ">=20"
+    "node": "^22.0.0 || ^24.0.0"
   },
   "publishConfig": {
     "access": "public"
   },
   "devDependencies": {
-    "@types/node": ">=20 <26",
-    "typescript": ">=5.5 <7"
+    "@types/node": ">=22 <25",
+    "typescript": ">=5.5 <6"
   },
   "keywords": [
     "thermal-printer",
