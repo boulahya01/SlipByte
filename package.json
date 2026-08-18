@@ -26,7 +26,7 @@
     "prepublishOnly": "npm run release:check"
   },
   "engines": {
-    "node": ">=20"
+    "node": "^22.0.0 || ^24.0.0"
   },
   "publishConfig": {
     "access": "public"
