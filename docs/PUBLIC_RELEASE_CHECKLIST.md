@@ -42,7 +42,7 @@ The following are **not required merely to develop in public**, but they are req
 ### Source and package quality
 
 - [ ] `npm run check` passes from a clean checkout
-- [ ] package lockfile is committed for reproducible contributor/CI installs
+- [x] package lockfile is committed for reproducible contributor/CI installs
 - [ ] `npm run release:check` passes on the exact release head
 - [ ] package name and npm ownership are confirmed
 - [ ] package version is changed from `0.0.0-dev` to the intended semver release
