@@ -93,7 +93,30 @@ Changing a printer, protocol, or connection should not require rewriting applica
 
 See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the layer boundaries.
 
-## Current API foundation
+## Try the implemented API
+
+The current package already has a hardware-free path that exercises the real receipt and layout pipeline. This example uses only exported APIs that exist today:
+
+```ts
+import { mockPrint, receipt } from "openreceipt";
+
+const document = receipt()
+  .title("My Store")
+  .item("Coffee", 2, 30)
+  .total("TOTAL", 60)
+  .cut()
+  .toDocument();
+
+const result = mockPrint(document, { paper: "80mm" });
+
+console.log(result.preview);
+```
+
+`mockPrint()` returns the immutable layout used by protocol encoders plus a deterministic plain-text preview. It does not emulate physical printer behavior or claim hardware compatibility; it is the safe development/test path before connecting a transport.
+
+See [`docs/PREVIEW.md`](docs/PREVIEW.md) for preview semantics and testing guidance.
+
+## Target high-level API
 
 The implemented lower-level path now covers document construction, layout, capability resolution, preview/mock output, native/raster representation selection, ESC/POS encoding, diagnostics, and raw TCP delivery. The complete high-level printer API shown below is still the target developer experience, **not a released API**:
 

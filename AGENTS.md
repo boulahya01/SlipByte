@@ -16,7 +16,7 @@ The core must remain:
 - content-language-agnostic: no public core API should assume Latin, Arabic, CJK, emoji, or any other script is the default;
 - hardware-capability-driven: behavior is based on declared capabilities and evidence, not brand-name assumptions;
 - protocol-extensible: ESC/POS is the first protocol adapter, not the definition of the core;
-- transport-extensible: TCP/USB are adapters, not application concerns.
+- transport-extensible: raw TCP is the v0.1 transport, while USB and other transports remain adapters rather than application concerns.
 
 Arabic/RTL, CJK, combining marks, emoji, long Latin text, and mixed-script receipts are conformance cases used to test whether the abstractions are general enough. Do not create script-specific application APIs when a general text/layout/capability abstraction can solve the problem.
 
@@ -26,11 +26,14 @@ Keep these concerns separate:
 
 1. Print/receipt document: what the application wants to print.
 2. Layout: how content fits a target media/profile.
-3. Encoder: how a printer protocol represents that layout.
-4. Printer profile: hardware capabilities and quirks.
-5. Transport: how bytes reach the printer.
+3. Printer profile/capabilities: what the target device can safely support.
+4. Representation selection: whether laid-out content uses configured native representation, an explicit safe fallback such as raster, or fails before protocol encoding.
+5. Protocol encoder: how the selected representation becomes protocol bytes.
+6. Transport: how encoded bytes reach the printer.
+7. Diagnostics: how failures and delivery uncertainty are classified without leaking receipt data or secrets.
+8. Preview/mock: a hardware-free consumer of the real document/layout path, not a second layout or device emulator.
 
-Application-facing code must not contain ESC/POS bytes, USB details, TCP sockets, or printer-brand conditions.
+Application-facing code must not contain ESC/POS bytes, USB details, TCP sockets, or printer-brand conditions. Representation selection must not smuggle protocol command values into the core, and preview/mock code must not duplicate layout, encoding, capability, or transport logic.
 
 ## Public API rules
 
@@ -59,7 +62,7 @@ Do not manufacture repository activity to satisfy an automation schedule. Public
 
 Do not add a new package, protocol, transport, dependency, or domain-specific primitive unless it solves a concrete user problem and fits the architecture.
 
-V1 uses TypeScript/Node.js as the npm runtime and ESC/POS as the first hardware protocol target, but the core document, layout, diagnostics, capability, and agent-facing contracts must remain reusable across future protocols and transports.
+V1 uses TypeScript/Node.js as the npm runtime and ESC/POS as the first hardware protocol target, but the core document, layout, diagnostics, capability, representation, and agent-facing contracts must remain reusable across future protocols and transports.
 
 ## AI-agent requirement
 
@@ -85,6 +88,8 @@ Run:
 ```bash
 npm run check
 ```
+
+Release/package changes must additionally satisfy the repository release gate documented in `package.json` and `docs/PUBLIC_RELEASE_CHECKLIST.md`.
 
 A change to a public API should include:
 
