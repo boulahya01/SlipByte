@@ -1,8 +1,8 @@
-# OpenReceipt Architecture
+# SlipByte Architecture
 
 ## Goal
 
-OpenReceipt separates **what an application wants to print** from **how a particular device receives and renders it**.
+SlipByte separates **what an application wants to print** from **how a particular device receives and renders it**.
 
 The architecture must not assume one business domain, one human language/script, one printer brand, one protocol, or one transport.
 
@@ -26,7 +26,7 @@ Application / AI coding agent
        Output device
 ```
 
-OpenReceipt begins with thermal receipt printers because that is the concrete problem being solved first. The abstractions above should remain general enough that adding another compatible protocol, transport, or print workflow does not require rewriting application intent.
+SlipByte begins with thermal receipt printers because that is the concrete problem being solved first. The abstractions above should remain general enough that adding another compatible protocol, transport, or print workflow does not require rewriting application intent.
 
 ## 1. Print document
 
@@ -111,7 +111,7 @@ The encoder translates laid-out operations and selected representations into a p
 
 First protocol target: ESC/POS.
 
-ESC/POS is an adapter behind the core architecture, not the definition of OpenReceipt.
+ESC/POS is an adapter behind the core architecture, not the definition of SlipByte.
 
 Encoders:
 
@@ -207,7 +207,7 @@ Examples:
 - malformed profile;
 - unsafe control input.
 
-A low-level system error may be preserved as a cause, but application developers and AI agents should receive an OpenReceipt-level explanation and, where practical, a remediation hint.
+A low-level system error may be preserved as a cause, but application developers and AI agents should receive a SlipByte-level explanation and, where practical, a remediation hint.
 
 Diagnostics must avoid leaking receipt data, credentials, device secrets, or network secrets by default.
 
