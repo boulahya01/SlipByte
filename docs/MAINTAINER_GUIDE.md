@@ -1,6 +1,6 @@
 # Maintainer Guide
 
-OpenReceipt is intended to be developed in public. Repository history and discussion should remain useful to developers long after a change is merged.
+SlipByte is intended to be developed in public. Repository history and discussion should remain useful to developers long after a change is merged.
 
 This guide applies to maintainers, contributors, coding agents, and scheduled automation.
 
@@ -148,7 +148,7 @@ Community reports, Reddit threads, issues in other projects, standards, and vend
 
 Record a finding when it changes a requirement, validates a design decision, documents a compatibility problem, or produces a reusable technical explanation. Preserve useful external-problem research even after the related code is finished because it may support future docs, debugging, support, and discoverability.
 
-Do not convert an interesting external post into roadmap scope unless it fits OpenReceipt's product boundary.
+Do not convert an interesting external post into roadmap scope unless it fits SlipByte's product boundary.
 
 ## Owner-only decisions
 
@@ -178,6 +178,6 @@ Perform a public-surface audit covering at least:
 - documentation that describes features not yet implemented;
 - release and CI blockers.
 
-Making the source repository public is not the same as publishing a stable npm release. The repository may be public while OpenReceipt is explicitly marked early development.
+Making the source repository public is not the same as publishing a stable npm release. The repository may be public while SlipByte is explicitly marked early development.
 
 Do not optimize history for appearance by falsifying authorship or evidence. The objective is a clean, truthful, useful engineering record.
