@@ -4,7 +4,7 @@ import test from "node:test";
 import {
   defineDeviceProfile,
   encodeEscPos,
-  OpenReceiptError,
+  SlipByteError,
 } from "../dist/index.js";
 
 const baseCapabilities = {
@@ -57,7 +57,7 @@ test("requires an explicit fallback when cut is not native", () => {
   assert.throws(
     () => encodeEscPos(layout, profile({ cut: "fallback" })),
     (error) =>
-      error instanceof OpenReceiptError &&
+      error instanceof SlipByteError &&
       error.code === "UNSUPPORTED_CAPABILITY" &&
       error.details.capability === "cut" &&
       error.details.support === "fallback",
@@ -80,7 +80,7 @@ test("rejects non-ESC/POS profiles", () => {
 
   assert.throws(
     () => encodeEscPos({ paper: { id: "fixture", widthMm: 80, columns: 48 }, nodes: [] }, wrongProtocol),
-    (error) => error instanceof OpenReceiptError && error.code === "UNSUPPORTED_PROTOCOL",
+    (error) => error instanceof SlipByteError && error.code === "UNSUPPORTED_PROTOCOL",
   );
 });
 
@@ -93,7 +93,7 @@ test("default text encoding rejects unsupported characters without copying recei
   assert.throws(
     () => encodeEscPos(layout, profile()),
     (error) =>
-      error instanceof OpenReceiptError &&
+      error instanceof SlipByteError &&
       error.code === "TEXT_ENCODING_FAILED" &&
       !("text" in error.details) &&
       !("value" in error.details),
@@ -126,6 +126,6 @@ test("rejects a direct text encoder omitted from the device profile", () => {
     () => encodeEscPos(layout, profile(), {
       textEncoder: { id: "undeclared", encode: () => Uint8Array.from([0x41]) },
     }),
-    (error) => error instanceof OpenReceiptError && error.code === "INVALID_ENCODER_OPTION",
+    (error) => error instanceof SlipByteError && error.code === "INVALID_ENCODER_OPTION",
   );
 });
