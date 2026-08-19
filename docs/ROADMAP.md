@@ -1,8 +1,8 @@
-# OpenReceipt Roadmap
+# SlipByte Roadmap
 
-Last reviewed: 2026-08-16
+Last reviewed: 2026-08-19
 
-OpenReceipt is being developed before the first npm release. The roadmap is ordered by architecture dependency, not by feature count.
+SlipByte is being developed before the first npm release. The roadmap is ordered by architecture dependency, not by feature count.
 
 ## North star
 
@@ -100,7 +100,7 @@ Preview does not duplicate layout, capability, protocol, or transport logic.
 
 Implemented:
 
-- stable OpenReceipt-level diagnostic classification
+- stable SlipByte-level diagnostic classification
 - encoding/capability/transport stage mapping
 - retry-safety guidance
 - explicit `not-started`, `uncertain`, and `unknown` delivery states
@@ -119,9 +119,9 @@ Implemented:
 
 Real compatibility claims still require exact, reviewable hardware or documentation evidence.
 
-### 10. Unicode rendering and fallback strategy — implementation complete; conformance active
+### 10. Unicode rendering and fallback strategy — complete for v0.1 software boundary
 
-Implemented:
+Implemented and validated:
 
 - generic native-text versus raster representation selection
 - profile-ordered native encoding candidates
@@ -132,30 +132,39 @@ Implemented:
 - Canvas2D Unicode-to-raster adapter
 - explicit text direction propagation for RTL/LTR cases
 - deterministic RGBA-to-monochrome conversion
+- real `@napi-rs/canvas` conformance run with non-blank Latin, Arabic/RTL, CJK, combining-mark, emoji, and mixed-script fixtures
 
-Current gate:
+The conformance evidence proves representative software rendering produced ink. It does not prove universal glyph correctness or physical-printer compatibility.
 
-- execute the real Canvas runtime/font conformance suite for Latin, Arabic/RTL, CJK, combining marks, emoji, and mixed-script text
-- review the evidence without treating non-blank output as proof of perfect glyph shaping or printer compatibility
+### 11. CI and package hardening — complete for current `main`
 
-Tracked in issue #6 and draft PR #29.
+Implemented and validated:
 
-### 11. CI and release hardening — next release gate
+- committed npm lockfile and clean `npm ci`
+- package contents audited through `scripts/verify-package.mjs`
+- isolated packed-package runtime import smoke test
+- packed declaration-consumer typecheck
+- `prepublishOnly` wired to the full release gate
+- Node.js 22 and 24 GitHub Actions matrix
+- successful GitHub-hosted CI after the account billing/startup blocker was resolved
+- exact merged-main local `npm ci && npm run release:check` with 89/89 tests passing
 
-Current known blocker: GitHub Actions startup/infrastructure failure tracked in issue #8.
+### 12. Project/package identity — active release work
 
-Before npm release:
+The original OpenReceipt name collided with an unrelated existing ecosystem. The owner selected **SlipByte** before the first public/npm release.
 
-- CI must start normally
-- exact release-head checks must pass
-- package-lock/reproducible install strategy must be settled
-- package contents must be audited with `npm pack --dry-run`
-- release process must not bypass tests/typecheck
-- public documentation must match the package actually being released
+Before this step is complete:
 
-### 12. Real hardware validation
+- package metadata and public API branding must use SlipByte consistently
+- repository-facing docs must use SlipByte consistently
+- exact npm ownership/availability for `slipbyte` must be confirmed
+- the GitHub repository should be renamed to match the selected identity
 
-Validate the end-to-end path on physical printers before broad compatibility claims:
+Tracked in issue #32.
+
+### 13. Real hardware validation — required before broad compatibility claims
+
+Validate the end-to-end path on at least the intended release-target physical printer before making a release-level physical compatibility claim:
 
 ```text
 Print document
@@ -169,13 +178,19 @@ Print document
 
 Record exact printer model, firmware/environment, transport, profile, command strategy, input fixture, and observed result for every compatibility claim.
 
-### 13. Public-development audit and npm v0.1
+If the first npm release intentionally makes no named physical-printer compatibility claim, that limitation must remain explicit; software tests must never be presented as hardware evidence.
+
+### 14. Public-development audit and npm v0.1
 
 Before public/npm release:
 
 - complete the repository/publication audit tracked in issue #11
 - verify README, license, security/support/contribution policy, templates, package metadata, and docs
 - ensure no secrets, sensitive captures, generated junk, or unsupported compatibility claims are present
+- configure npm provenance/trusted publishing for the release workflow
+- confirm the exact npm package identity and ownership
+- change `0.0.0-dev` to the intended v0.1 semver only on the release head
+- ensure release publication cannot bypass `npm run release:check`
 - resolve or explicitly accept every release blocker
 
 Repository visibility changes and npm publication require explicit maintainer action; automation does not perform either automatically.
