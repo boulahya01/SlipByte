@@ -44,7 +44,7 @@ The following are **not required merely to develop in public**, but they are req
 - [ ] `npm run check` passes from a clean checkout of the exact release head
 - [x] package lockfile is committed for reproducible contributor/CI installs
 - [ ] `npm run release:check` passes on the exact release head
-- [ ] exact npm ownership/availability for `slipbyte` is confirmed
+- [x] exact npm ownership/availability for `slipbyte` is confirmed
 - [ ] package version is changed from `0.0.0-dev` to the intended semver release
 - [x] package artifact policy is encoded: only `dist`, package metadata, README, and LICENSE may ship
 - [x] `prepublishOnly` runs the complete release check and blocks normal publishing when validation or package verification fails
@@ -90,7 +90,7 @@ The Unicode conformance evidence is software-rendering evidence only. It does no
 - [x] common transport/encoding failures expose structured diagnostic guidance
 - [x] public lower-level API names and boundaries are documented
 - [ ] first released copy/paste example is validated from the renamed packed package
-- [ ] TypeScript declarations are confirmed in the renamed packed npm artifact by `npm run release:check`
+- [x] TypeScript declarations are confirmed in the renamed packed npm artifact by `npm run release:check`
 - [ ] supported Node.js versions are exercised on the renamed release head
 
 ### AI-agent usability
@@ -118,11 +118,11 @@ The owner selected **SlipByte** to replace the colliding OpenReceipt identity be
 
 Before closing the identity blocker:
 
-- [ ] current package/root API/docs use SlipByte consistently
-- [ ] npm ownership/availability for `slipbyte` is confirmed directly against the registry
-- [ ] GitHub repository is renamed to SlipByte
+- [x] current package/root API/docs use SlipByte consistently
+- [x] npm ownership/availability for `slipbyte` is confirmed directly against the registry
+- [x] GitHub repository is renamed to SlipByte
 - [ ] repository description/topics use the selected identity
-- [ ] release docs contain no implication of affiliation with the unrelated pre-existing OpenReceipt ecosystem
+- [x] release docs contain no implication of affiliation with the unrelated pre-existing OpenReceipt ecosystem
 
 Historical issues and commits may retain the former name when it is part of the factual engineering history; current public product documentation should not.
 
