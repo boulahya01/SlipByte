@@ -47,3 +47,8 @@ export class SlipByteError extends Error {
     this.details = Object.freeze({ ...details });
   }
 }
+
+// Internal bridge for implementation modules that have not yet been mechanically
+// renamed. This symbol is intentionally not exported from the package root.
+export const OpenReceiptError = SlipByteError;
+export type OpenReceiptError = SlipByteError;
