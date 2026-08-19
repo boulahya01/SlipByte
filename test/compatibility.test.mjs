@@ -4,7 +4,7 @@ import test from "node:test";
 import {
   defineCapabilityEvidence,
   findCapabilityEvidence,
-  OpenReceiptError,
+  SlipByteError,
 } from "../dist/index.js";
 
 test("normalizes and freezes compatibility evidence", () => {
@@ -70,7 +70,7 @@ test("validates untrusted collections and query objects", () => {
     assert.throws(
       () => findCapabilityEvidence(evidence, query),
       (error) =>
-        error instanceof OpenReceiptError &&
+        error instanceof SlipByteError &&
         error.code === "INVALID_COMPATIBILITY_EVIDENCE",
     );
   }
@@ -88,7 +88,7 @@ test("rejects malformed evidence without copying arbitrary values into error det
     assert.throws(
       () => defineCapabilityEvidence(evidence),
       (error) =>
-        error instanceof OpenReceiptError &&
+        error instanceof SlipByteError &&
         error.code === "INVALID_COMPATIBILITY_EVIDENCE" &&
         !Object.values(error.details).includes(secret),
     );
@@ -108,7 +108,7 @@ test("does not echo profile identifiers when another evidence field is invalid",
         reference: "bench-001",
       }),
     (error) =>
-      error instanceof OpenReceiptError &&
+      error instanceof SlipByteError &&
       error.code === "INVALID_COMPATIBILITY_EVIDENCE" &&
       !Object.values(error.details).includes(sensitiveProfileId),
   );
@@ -120,7 +120,7 @@ test("does not echo profile identifiers when another evidence field is invalid",
         capability: "not-a-capability",
       }),
     (error) =>
-      error instanceof OpenReceiptError &&
+      error instanceof SlipByteError &&
       error.code === "INVALID_COMPATIBILITY_EVIDENCE" &&
       !Object.values(error.details).includes(sensitiveProfileId),
   );
@@ -162,7 +162,7 @@ test("rejects unsafe control characters in evidence text without echoing content
     assert.throws(
       () => defineCapabilityEvidence(evidence),
       (error) =>
-        error instanceof OpenReceiptError &&
+        error instanceof SlipByteError &&
         error.code === "INVALID_COMPATIBILITY_EVIDENCE" &&
         !("value" in error.details),
     );
