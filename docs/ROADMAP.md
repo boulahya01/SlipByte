@@ -2,7 +2,7 @@
 
 Last reviewed: 2026-08-19
 
-`slipbyte@0.1.0` is published on npm. The roadmap now moves from release preparation to real-device evidence and a simpler high-level printing API.
+`slipbyte@0.1.0` is published on npm. Development on `main` has since added the first simple high-level ESC/POS-over-TCP print orchestration API; physical-printer evidence remains the next major validation gate.
 
 ## North star
 
@@ -47,6 +47,8 @@ USB, serial, Bluetooth, operating-system printer queues, richer image processing
 
 SlipByte makes **no named physical-printer compatibility claim yet**. Software tests, Canvas conformance, and TCP contract coverage are not physical-printer evidence.
 
+The high-level `printEscPosTcp()` orchestration API is implemented on `main` after the `0.1.0` release. It is not part of the published `0.1.0` package unless and until a later release is explicitly authorized and published.
+
 ## Next
 
 ### 1. Real printer evidence
@@ -62,11 +64,20 @@ Validate one exact ESC/POS printer end to end and record:
 
 Compatibility claims should be added only from exact, reviewable evidence.
 
-### 2. Simple high-level printing API
+### 2. High-level printing API — implemented on `main`
 
-Build the common path on top of the existing layers so an application can configure a printer/transport once and submit receipt intent without manually wiring layout, encoding, and transport for every job.
+`printEscPosTcp()` now provides the common ESC/POS-over-TCP path on top of the existing layers:
 
-The high-level API must remain a thin orchestration layer; it must not duplicate layout, capability, representation, protocol, or transport logic.
+```text
+ReceiptDocument
+→ layoutReceipt()
+→ encodeEscPos()
+→ sendTcp()
+```
+
+The API keeps the device profile and transport explicit and reuses the existing layout, capability, encoding, protocol, and transport contracts rather than duplicating them.
+
+Further high-level API work should be driven by concrete consumer or hardware evidence, not by adding convenience surface speculatively.
 
 ### 3. Expand from evidence and demand
 
