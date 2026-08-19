@@ -50,9 +50,22 @@ The following are **not required merely to develop in public**, but they are req
 - [x] package version is set to the owner-confirmed first release version `0.1.0`
 - [x] package artifact policy is encoded: only `dist`, package metadata, README, and LICENSE may ship
 - [x] `prepublishOnly` runs the complete release check and blocks normal publishing when validation or package verification fails
-- [ ] npm provenance / trusted publishing is configured for the first release workflow
+- [x] stage-only trusted-publishing workflow is prepared without a long-lived npm publish token
+- [ ] npm trusted publisher is configured after the first-package bootstrap publish
+- [ ] npm publishing access is changed to require 2FA and disallow traditional publish tokens after trusted publishing is configured
 
 `npm run release:check` performs the full TypeScript/test gate and then runs `npm pack --dry-run --json --ignore-scripts` through `scripts/verify-package.mjs`. The verifier requires `dist/index.js`, `dist/index.d.ts`, package metadata, README, and LICENSE and rejects repository-only files such as `src`, `test`, `scripts`, `docs`, and `.github` from the npm artifact. It also installs the packed tarball into an isolated consumer, imports the package by its declared package name, runs the hardware-free receipt/preview path, and compiles a TypeScript consumer against the packed declarations.
+
+### First-package bootstrap constraint
+
+npm trusted-publisher configuration requires the package to already exist in the npm registry. Therefore the first-ever creation of `slipbyte` cannot use its final OIDC trust relationship.
+
+The recommended bootstrap path is a maintainer-run interactive `npm publish --access public` with npm account 2FA after the exact `0.1.0` release candidate passes every gate. Automation must not run that bootstrap publish or create/store a bypass-2FA npm token.
+
+- [ ] owner explicitly accepts the first-package bootstrap path and its lack of GitHub Actions provenance for `0.1.0`
+- [ ] bootstrap publication remains an explicit owner action after the final release summary
+
+See [`RELEASING.md`](RELEASING.md) for the steady-state staged publishing flow.
 
 ### Core v0.1 pipeline
 
@@ -116,9 +129,15 @@ Before npm v0.1:
 - [x] normal CI jobs start successfully
 - [ ] required checks are green on the exact final release head
 - [x] branch/ruleset settings match the intended merge policy
-- [ ] release workflow cannot bypass validation
+- [x] staged release workflow requires an existing tag whose `vX.Y.Z` value matches `package.json`
+- [x] staged release workflow requires the tagged commit to already be contained in `main`
+- [x] staged release workflow reruns `npm ci` and `npm run release:check` before any npm staging command
+- [x] staged release workflow uses OIDC permissions and `npm stage publish`; it does not contain an npm publish token
+- [x] staged release workflow cannot make a package public without the separate npm 2FA approval step once trusted publishing is configured
 
 The active `Protect main` ruleset targets the default branch with no bypass actors. It requires pull requests, conversation resolution, strict up-to-date status checks for `check (22)` and `check (24)`, blocks force pushes and deletion, and permits squash merges only.
+
+The staged release workflow is intentionally a future steady-state path. It cannot authenticate until the first package exists and its npm Trusted Publisher is configured for `.github/workflows/publish.yml` with **`npm stage publish` only** permission.
 
 ## Identity gate
 
