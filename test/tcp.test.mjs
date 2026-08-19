@@ -6,7 +6,7 @@ import {
   DEFAULT_TCP_CLOSE_TIMEOUT_MS,
   DEFAULT_TCP_CONNECT_TIMEOUT_MS,
   DEFAULT_TCP_WRITE_TIMEOUT_MS,
-  OpenReceiptError,
+  SlipByteError,
   sendTcp,
 } from "../dist/index.js";
 
@@ -84,7 +84,7 @@ test("does not assume a default printer port", async () => {
   await assert.rejects(
     () => sendTcp(new Uint8Array(), { host: "printer.local" }),
     (error) =>
-      error instanceof OpenReceiptError &&
+      error instanceof SlipByteError &&
       error.code === "INVALID_TCP_OPTION",
   );
 });
@@ -99,7 +99,7 @@ test("validates stage timeout options before connecting", async () => {
     await assert.rejects(
       () => sendTcp(new Uint8Array(), options),
       (error) =>
-        error instanceof OpenReceiptError &&
+        error instanceof SlipByteError &&
         error.code === "INVALID_TCP_OPTION",
     );
   }
@@ -115,7 +115,7 @@ test("wraps connector failures without copying arbitrary failure payloads", asyn
       },
     ),
     (error) =>
-      error instanceof OpenReceiptError &&
+      error instanceof SlipByteError &&
       error.code === "TCP_CONNECT_FAILED" &&
       !("cause" in error.details),
   );
@@ -129,7 +129,7 @@ test("times out a hanging injected connector", async () => {
       async () => new Promise(() => {}),
     ),
     (error) =>
-      error instanceof OpenReceiptError &&
+      error instanceof SlipByteError &&
       error.code === "TCP_CONNECT_TIMEOUT",
   );
 });
@@ -150,7 +150,7 @@ test("attempts to close after a failed write and preserves the write failure", a
         },
       }),
     ),
-    (error) => error instanceof OpenReceiptError && error.code === "TCP_WRITE_FAILED",
+    (error) => error instanceof SlipByteError && error.code === "TCP_WRITE_FAILED",
   );
 
   assert.equal(closed, true);
@@ -177,7 +177,7 @@ test("times out a hanging write, aborts, then still attempts close", async () =>
       }),
     ),
     (error) =>
-      error instanceof OpenReceiptError &&
+      error instanceof SlipByteError &&
       error.code === "TCP_WRITE_TIMEOUT",
   );
 
@@ -205,7 +205,7 @@ test("reports close timeout separately and aborts the connection", async () => {
       }),
     ),
     (error) =>
-      error instanceof OpenReceiptError &&
+      error instanceof SlipByteError &&
       error.code === "TCP_CLOSE_TIMEOUT",
   );
 
@@ -218,9 +218,9 @@ test("preserves structured failures from an injected connector", async () => {
       Uint8Array.from([1]),
       { host: "printer.local", port: 9100 },
       async () => {
-        throw new OpenReceiptError("TCP_CONNECT_TIMEOUT", "fixture timeout");
+        throw new SlipByteError("TCP_CONNECT_TIMEOUT", "fixture timeout");
       },
     ),
-    (error) => error instanceof OpenReceiptError && error.code === "TCP_CONNECT_TIMEOUT",
+    (error) => error instanceof SlipByteError && error.code === "TCP_CONNECT_TIMEOUT",
   );
 });
