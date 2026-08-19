@@ -1,6 +1,6 @@
 # Compatibility evidence
 
-OpenReceipt separates **declared device behavior** from **evidence about real devices**. A `DeviceProfile` tells encoders what behavior to use. A `CapabilityEvidence` record tells maintainers and tooling why a compatibility claim may be credible.
+SlipByte separates **declared device behavior** from **evidence about real devices**. A `DeviceProfile` tells encoders what behavior to use. A `CapabilityEvidence` record tells maintainers and tooling why a compatibility claim may be credible.
 
 This distinction prevents a printer model name, an `ESC/POS compatible` label, or a missing research result from silently becoming a hardware-support claim.
 
@@ -21,7 +21,7 @@ Malformed values are not copied into structured error details. Validation report
 
 ## No inferred consensus
 
-Evidence records do not mutate a `DeviceProfile` and OpenReceipt does not automatically collapse multiple records into one truth value. Two sources can disagree. `findCapabilityEvidence()` preserves that disagreement so a maintainer or higher-level policy can resolve it explicitly.
+Evidence records do not mutate a `DeviceProfile` and SlipByte does not automatically collapse multiple records into one truth value. Two sources can disagree. `findCapabilityEvidence()` preserves that disagreement so a maintainer or higher-level policy can resolve it explicitly.
 
 An empty evidence result means **no evidence is recorded**. It does not mean `unsupported`.
 
@@ -31,7 +31,7 @@ This rule is important for compatibility databases and AI coding agents: absence
 
 The source category records provenance, not a universal confidence score. Hardware tests are meaningful only for the exact tested model/environment. Documentation can be incomplete or firmware-specific. Community reports can reveal real compatibility problems without proving universal behavior.
 
-OpenReceipt should record exact model/environment details in references or notes when real hardware validation begins. Do not turn generic vendor claims into broad model-family support.
+SlipByte should record exact model/environment details in references or notes when real hardware validation begins. Do not turn generic vendor claims into broad model-family support.
 
 ## Fixtures versus real compatibility
 
