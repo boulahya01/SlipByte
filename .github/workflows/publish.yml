@@ -12,9 +12,16 @@ permissions:
   contents: read
   id-token: write
 
+concurrency:
+  group: npm-stage-release
+  cancel-in-progress: false
+
 jobs:
   stage:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      RELEASE_TAG: ${{ inputs.tag }}
     steps:
       - name: Checkout release tag
         uses: actions/checkout@v7
@@ -45,7 +52,7 @@ jobs:
             exit 1
           fi
 
-          if ! git show-ref --verify --quiet "refs/tags/${{ inputs.tag }}"; then
+          if ! git show-ref --verify --quiet "refs/tags/${RELEASE_TAG}"; then
             echo "Input must name an existing Git tag."
             exit 1
           fi
@@ -53,8 +60,8 @@ jobs:
           version="$(node -p "JSON.parse(require('fs').readFileSync('package.json', 'utf8')).version")"
           expected_tag="v${version}"
 
-          if [ "${{ inputs.tag }}" != "$expected_tag" ]; then
-            echo "Tag ${{ inputs.tag }} does not match package version ${version}. Expected ${expected_tag}."
+          if [ "${RELEASE_TAG}" != "${expected_tag}" ]; then
+            echo "Tag ${RELEASE_TAG} does not match package version ${version}. Expected ${expected_tag}."
             exit 1
           fi
 
