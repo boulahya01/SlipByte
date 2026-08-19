@@ -4,7 +4,7 @@ import {
   type DeviceProfile,
   type PrinterCapability,
 } from "./capabilities.js";
-import { OpenReceiptError } from "./errors.js";
+import { SlipByteError } from "./errors.js";
 import type { LayoutDocument } from "./layout.js";
 
 const ESC = 0x1b;
@@ -43,7 +43,7 @@ export const ESC_POS_ASCII_TEXT_ENCODER: EscPosTextEncoder = Object.freeze({
     for (let index = 0; index < text.length; index += 1) {
       const codePoint = text.charCodeAt(index);
       if (codePoint < 0x20 || codePoint > 0x7e) {
-        throw new OpenReceiptError(
+        throw new SlipByteError(
           "TEXT_ENCODING_FAILED",
           "The default ESC/POS text encoder only accepts printable ASCII.",
           { encoderId: "ascii", characterIndex: index },
@@ -63,7 +63,7 @@ export function encodeEscPos(
 ): Uint8Array {
   const resolvedProfile = defineDeviceProfile(profile);
   if (resolvedProfile.protocol !== "escpos") {
-    throw new OpenReceiptError(
+    throw new SlipByteError(
       "UNSUPPORTED_PROTOCOL",
       'The ESC/POS encoder requires a device profile with protocol "escpos".',
       { profileId: resolvedProfile.id, protocol: resolvedProfile.protocol },
@@ -75,7 +75,7 @@ export function encodeEscPos(
     resolvedOptions.textEncoder !== undefined &&
     resolvedOptions.textEncoding !== undefined
   ) {
-    throw new OpenReceiptError(
+    throw new SlipByteError(
       "INVALID_ENCODER_OPTION",
       "Configure either textEncoder or textEncoding, not both.",
     );
@@ -131,7 +131,7 @@ export function encodeEscPos(
           break;
         }
 
-        throw new OpenReceiptError(
+        throw new SlipByteError(
           "UNSUPPORTED_CAPABILITY",
           cut.support === "fallback"
             ? "The device profile marks cut as fallback, but no explicit ESC/POS cut fallback was configured."
@@ -161,7 +161,7 @@ function requireNativeCapability(
   const resolution = resolveCapability(profile, capability);
   if (resolution.support === "native") return;
 
-  throw new OpenReceiptError(
+  throw new SlipByteError(
     "UNSUPPORTED_CAPABILITY",
     `The ESC/POS encoder requires native ${capability} support for this operation.`,
     {
@@ -175,7 +175,7 @@ function requireNativeCapability(
 
 function resolveEncoderOptions(value: EscPosEncoderOptions): EscPosEncoderOptions {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
-    throw new OpenReceiptError(
+    throw new SlipByteError(
       "INVALID_ENCODER_OPTION",
       "ESC/POS encoder options must be an object.",
       { receivedType: Array.isArray(value) ? "array" : typeof value },
@@ -191,7 +191,7 @@ function resolveTextEncodingConfig(
 ): EscPosTextEncodingConfig | undefined {
   if (value === undefined) return undefined;
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
-    throw new OpenReceiptError(
+    throw new SlipByteError(
       "INVALID_ENCODER_OPTION",
       "textEncoding must be an object when provided.",
       { receivedType: Array.isArray(value) ? "array" : typeof value },
@@ -202,7 +202,7 @@ function resolveTextEncodingConfig(
   const encodingId = requireSafeIdentifier(value.encodingId, "textEncoding.encodingId");
 
   if (profileId !== profile.id) {
-    throw new OpenReceiptError(
+    throw new SlipByteError(
       "INVALID_ENCODER_OPTION",
       "ESC/POS text encoding configuration belongs to a different device profile.",
       { profileId: profile.id },
@@ -212,7 +212,7 @@ function resolveTextEncodingConfig(
   requireDeclaredTextEncoding(profile, encodingId);
 
   if (!Number.isInteger(value.codePage) || value.codePage < 0 || value.codePage > 255) {
-    throw new OpenReceiptError(
+    throw new SlipByteError(
       "INVALID_ENCODER_OPTION",
       "ESC/POS text encoding codePage must be an integer from 0 through 255.",
       { profileId: profile.id },
@@ -221,7 +221,7 @@ function resolveTextEncodingConfig(
 
   const encoder = resolveTextEncoder(value.encoder);
   if (encoder.id !== encodingId) {
-    throw new OpenReceiptError(
+    throw new SlipByteError(
       "INVALID_ENCODER_OPTION",
       "ESC/POS text encoder id must match textEncoding.encodingId.",
       { profileId: profile.id },
@@ -242,7 +242,7 @@ function requireDeclaredTextEncoding(
 ): void {
   if ((profile.textEncodings ?? []).includes(encodingId)) return;
 
-  throw new OpenReceiptError(
+  throw new SlipByteError(
     "INVALID_ENCODER_OPTION",
     "ESC/POS text encoding must be declared by the device profile.",
     { profileId: profile.id },
@@ -258,7 +258,7 @@ function resolveTextEncoder(encoder: EscPosTextEncoder): EscPosTextEncoder {
     UNSAFE_IDENTIFIER_TEXT.test(encoder.id) ||
     typeof encoder.encode !== "function"
   ) {
-    throw new OpenReceiptError(
+    throw new SlipByteError(
       "INVALID_ENCODER_OPTION",
       "textEncoder must provide a safe non-empty id and an encode(text) function.",
     );
@@ -273,7 +273,7 @@ function requireSafeIdentifier(value: unknown, field: string): string {
     !value.trim() ||
     UNSAFE_IDENTIFIER_TEXT.test(value)
   ) {
-    throw new OpenReceiptError(
+    throw new SlipByteError(
       "INVALID_ENCODER_OPTION",
       `${field} must be safe non-empty text.`,
       { field, receivedType: typeof value },
@@ -293,7 +293,7 @@ function resolveCutFallback(
     !Number.isInteger(fallback.lines) ||
     fallback.lines < 1
   ) {
-    throw new OpenReceiptError(
+    throw new SlipByteError(
       "INVALID_ENCODER_OPTION",
       "ESC/POS cutFallback must be a feed fallback with a positive integer line count.",
     );
@@ -312,11 +312,11 @@ function encodeText(
   try {
     encoded = encoder.encode(text);
   } catch (cause) {
-    if (cause instanceof OpenReceiptError && cause.code === "TEXT_ENCODING_FAILED") {
+    if (cause instanceof SlipByteError && cause.code === "TEXT_ENCODING_FAILED") {
       throw cause;
     }
 
-    throw new OpenReceiptError(
+    throw new SlipByteError(
       "TEXT_ENCODING_FAILED",
       "The configured ESC/POS text encoder failed.",
       { encoderId: encoder.id, sourceNodeIndex },
@@ -324,7 +324,7 @@ function encodeText(
   }
 
   if (!(encoded instanceof Uint8Array)) {
-    throw new OpenReceiptError(
+    throw new SlipByteError(
       "TEXT_ENCODING_FAILED",
       "The configured ESC/POS text encoder must return Uint8Array bytes.",
       { encoderId: encoder.id, sourceNodeIndex },
