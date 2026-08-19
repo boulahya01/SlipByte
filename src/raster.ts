@@ -1,4 +1,4 @@
-import { OpenReceiptError } from "./errors.js";
+import { SlipByteError } from "./errors.js";
 
 const UNSAFE_IDENTIFIER_TEXT = /[\u0000-\u001F\u007F]/u;
 
@@ -16,7 +16,7 @@ export type RasterTextRenderer = Readonly<{
 export function defineRasterImage(value: unknown): RasterImage {
   const candidate = value as Partial<RasterImage> | null;
   if (candidate === null || typeof candidate !== "object" || Array.isArray(candidate)) {
-    throw new OpenReceiptError(
+    throw new SlipByteError(
       "INVALID_RASTER_IMAGE",
       "Raster image must be an object.",
       { receivedType: Array.isArray(candidate) ? "array" : typeof candidate },
@@ -29,7 +29,7 @@ export function defineRasterImage(value: unknown): RasterImage {
   const expectedLength = bytesPerRow * height;
 
   if (!Number.isSafeInteger(expectedLength)) {
-    throw new OpenReceiptError(
+    throw new SlipByteError(
       "INVALID_RASTER_IMAGE",
       "Raster image dimensions are too large.",
       { width, height },
@@ -37,7 +37,7 @@ export function defineRasterImage(value: unknown): RasterImage {
   }
 
   if (!Array.isArray(candidate.data) && !(candidate.data instanceof Uint8Array)) {
-    throw new OpenReceiptError(
+    throw new SlipByteError(
       "INVALID_RASTER_IMAGE",
       "Raster image data must be an array or Uint8Array of packed bytes.",
       { receivedType: typeof candidate.data },
@@ -46,7 +46,7 @@ export function defineRasterImage(value: unknown): RasterImage {
 
   const data = Array.from(candidate.data as readonly number[]);
   if (data.length !== expectedLength) {
-    throw new OpenReceiptError(
+    throw new SlipByteError(
       "INVALID_RASTER_IMAGE",
       "Raster image data length does not match its dimensions.",
       { width, height, expectedLength, receivedLength: data.length },
@@ -61,7 +61,7 @@ export function defineRasterImage(value: unknown): RasterImage {
       byte < 0 ||
       byte > 255
     ) {
-      throw new OpenReceiptError(
+      throw new SlipByteError(
         "INVALID_RASTER_IMAGE",
         "Raster image data entries must be bytes.",
         { byteIndex: index, receivedType: typeof byte },
@@ -76,7 +76,7 @@ export function defineRasterImage(value: unknown): RasterImage {
       const lastByteIndex = row * bytesPerRow + bytesPerRow - 1;
       const lastByte = data[lastByteIndex] ?? 0;
       if ((lastByte & paddingMask) !== 0) {
-        throw new OpenReceiptError(
+        throw new SlipByteError(
           "INVALID_RASTER_IMAGE",
           "Unused padding bits in raster rows must be zero.",
           { row },
@@ -97,7 +97,7 @@ export function renderTextToRaster(
   renderer: RasterTextRenderer,
 ): RasterImage {
   if (typeof text !== "string") {
-    throw new OpenReceiptError(
+    throw new SlipByteError(
       "INVALID_RASTER_RENDERER",
       "Raster text input must be a string.",
       { receivedType: typeof text },
@@ -110,7 +110,7 @@ export function renderTextToRaster(
   try {
     rendered = resolvedRenderer.render(text);
   } catch {
-    throw new OpenReceiptError(
+    throw new SlipByteError(
       "RASTER_RENDER_FAILED",
       "The configured raster text renderer failed.",
       { rendererId: resolvedRenderer.id },
@@ -120,8 +120,8 @@ export function renderTextToRaster(
   try {
     return defineRasterImage(rendered);
   } catch (error) {
-    if (error instanceof OpenReceiptError && error.code === "INVALID_RASTER_IMAGE") {
-      throw new OpenReceiptError(
+    if (error instanceof SlipByteError && error.code === "INVALID_RASTER_IMAGE") {
+      throw new SlipByteError(
         "RASTER_RENDER_FAILED",
         "The configured raster text renderer returned an invalid raster image.",
         { rendererId: resolvedRenderer.id },
@@ -141,7 +141,7 @@ function resolveRasterRenderer(renderer: RasterTextRenderer): RasterTextRenderer
     UNSAFE_IDENTIFIER_TEXT.test(renderer.id) ||
     typeof renderer.render !== "function"
   ) {
-    throw new OpenReceiptError(
+    throw new SlipByteError(
       "INVALID_RASTER_RENDERER",
       "Raster text renderer must provide a safe non-empty id and render(text) function.",
     );
@@ -152,7 +152,7 @@ function resolveRasterRenderer(renderer: RasterTextRenderer): RasterTextRenderer
 
 function requirePositiveInteger(value: unknown, field: string): number {
   if (typeof value !== "number" || !Number.isInteger(value) || value < 1) {
-    throw new OpenReceiptError(
+    throw new SlipByteError(
       "INVALID_RASTER_IMAGE",
       `Raster image ${field} must be a positive integer.`,
       { field, receivedType: typeof value },
