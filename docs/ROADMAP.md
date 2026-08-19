@@ -149,22 +149,23 @@ Implemented and validated:
 - successful GitHub-hosted CI after the account billing/startup blocker was resolved
 - exact merged-main local `npm ci && npm run release:check` with 89/89 tests passing
 
-### 12. Project/package identity — active release work
+### 12. Project/package identity — complete
 
 The original OpenReceipt name collided with an unrelated existing ecosystem. The owner selected **SlipByte** before the first public/npm release.
 
-Before this step is complete:
+Completed:
 
-- package metadata and public API branding must use SlipByte consistently
-- repository-facing docs must use SlipByte consistently
-- exact npm ownership/availability for `slipbyte` must be confirmed
-- the GitHub repository should be renamed to match the selected identity
+- package metadata and public API branding use SlipByte consistently
+- repository-facing docs use SlipByte consistently
+- exact npm availability for unscoped `slipbyte` was confirmed directly against the registry before publication
+- the GitHub repository was renamed to `boulahya01/SlipByte`
+- public repository description/topics and release docs use the SlipByte identity
 
-Tracked in issue #32.
+Identity issue #32 is closed completed.
 
-### 13. Real hardware validation — required before broad compatibility claims
+### 13. Real hardware validation — required for physical compatibility claims, not for a claim-free first release
 
-Validate the end-to-end path on at least the intended release-target physical printer before making a release-level physical compatibility claim:
+A named physical-printer compatibility claim requires end-to-end evidence through:
 
 ```text
 Print document
@@ -176,24 +177,32 @@ Print document
 → real device
 ```
 
-Record exact printer model, firmware/environment, transport, profile, command strategy, input fixture, and observed result for every compatibility claim.
+For every future compatibility claim, record exact printer model, firmware/environment, transport, profile, command strategy, input fixture, and observed result.
 
-If the first npm release intentionally makes no named physical-printer compatibility claim, that limitation must remain explicit; software tests must never be presented as hardware evidence.
+The first npm release intentionally makes **no named physical-printer compatibility claim**. Therefore physical-printer testing is not represented as a completed release proof and is not required merely to publish the software package. Software tests, Canvas conformance, and TCP contract coverage must never be presented as hardware evidence.
 
-### 14. Public-development audit and npm v0.1
+### 14. Public-development audit and npm v0.1 — release preparation active
 
-Before public/npm release:
+Completed:
 
-- complete the repository/publication audit tracked in issue #11
-- verify README, license, security/support/contribution policy, templates, package metadata, and docs
-- ensure no secrets, sensitive captures, generated junk, or unsupported compatibility claims are present
-- configure npm provenance/trusted publishing for the release workflow
-- confirm the exact npm package identity and ownership
-- change `0.0.0-dev` to the intended v0.1 semver only on the release head
+- public-development audit #11
+- repository visibility/metadata review
+- all-history sensitive-data review
+- protected default-branch ruleset with required Node.js 22/24 checks
+- package identity `slipbyte`
+- owner-confirmed and merged package version `0.1.0`
+- packed-package artifact/runtime/declaration verification
+
+Remaining before npm publication:
+
+- finish the release-facing claim/copy-paste audit
+- configure npm trusted publishing/provenance using current official guidance
 - ensure release publication cannot bypass `npm run release:check`
-- resolve or explicitly accept every release blocker
+- run final exact-release-candidate validation on Node.js 22 and 24
+- summarize unsupported/untested areas and residual release risks
+- obtain explicit owner authorization before npm publication, tag creation, or GitHub Release creation
 
-Repository visibility changes and npm publication require explicit maintainer action; automation does not perform either automatically.
+Repository visibility is already public. npm publication remains an explicit maintainer action; automation does not perform it automatically.
 
 ## After v0.1
 

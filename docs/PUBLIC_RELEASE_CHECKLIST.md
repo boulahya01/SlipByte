@@ -17,7 +17,7 @@ Before changing repository visibility to public:
 - [x] LICENSE, SECURITY.md, SUPPORT.md, CONTRIBUTING.md, and CODE_OF_CONDUCT.md are present
 - [x] maintainer/automation behavior is documented
 - [x] `.gitignore` covers environment files, keys/certificates, logs, captures, generated output, and editor files
-- [x] package version remains `0.0.0-dev`
+- [x] package version remained `0.0.0-dev` through the public-development audit; release versioning was handled later as a separate gate
 - [x] compatibility policy rejects broad claims without evidence
 - [x] CI status is documented truthfully
 - [x] repository visibility is public and has been reviewed in the public-readiness audit
@@ -43,11 +43,11 @@ The following are **not required merely to develop in public**, but they are req
 
 ### Source and package quality
 
-- [ ] `npm run check` passes from a clean checkout of the exact release head
+- [ ] `npm run check` passes from a clean checkout of the exact final release head
 - [x] package lockfile is committed for reproducible contributor/CI installs
-- [ ] `npm run release:check` passes on the exact release head
+- [ ] `npm run release:check` passes on the exact final release head
 - [x] exact npm ownership/availability for `slipbyte` is confirmed
-- [ ] package version is changed from `0.0.0-dev` to the intended semver release
+- [x] package version is set to the owner-confirmed first release version `0.1.0`
 - [x] package artifact policy is encoded: only `dist`, package metadata, README, and LICENSE may ship
 - [x] `prepublishOnly` runs the complete release check and blocks normal publishing when validation or package verification fails
 - [ ] npm provenance / trusted publishing is configured for the first release workflow
@@ -83,17 +83,21 @@ The Unicode conformance evidence is software-rendering evidence only. It does no
 - [x] normal text cannot inject raw printer control commands
 - [x] external/runtime metadata is validated before use in structured contracts
 - [x] diagnostics avoid leaking receipt contents or arbitrary low-level payloads by default
-- [ ] every named physical-printer compatibility claim in the release has exact evidence
-- [ ] end-to-end physical-printer evidence is recorded for any release-target compatibility claim
+- [x] the first npm release intentionally makes no named physical-printer compatibility claim
+- [x] software tests, Canvas conformance, TCP contract coverage, and CI are not represented as physical-printer evidence
+
+If a named printer/model compatibility claim is added before publication, exact end-to-end physical-device evidence becomes a release gate and these two claim-free checks must be revisited.
 
 ### Developer experience
 
 - [x] hardware-free preview/mock path works through the real layout path
 - [x] common transport/encoding failures expose structured diagnostic guidance
 - [x] public lower-level API names and boundaries are documented
-- [ ] first released copy/paste example is validated from the renamed packed package
+- [x] first released copy/paste example is validated from an isolated packed `slipbyte` consumer through `npm run release:check`
 - [x] TypeScript declarations are confirmed in the renamed packed npm artifact by `npm run release:check`
-- [ ] supported Node.js versions are exercised on the renamed release head
+- [ ] supported Node.js versions are exercised on the exact final release head
+
+The README's first example uses the same exported `receipt()` → `mockPrint()` flow exercised by `scripts/verify-package.mjs` after installing the generated tarball into a temporary consumer project.
 
 ### AI-agent usability
 
@@ -110,7 +114,7 @@ GitHub Actions is functioning after the account billing/startup blocker in issue
 Before npm v0.1:
 
 - [x] normal CI jobs start successfully
-- [ ] required checks are green on the exact release head
+- [ ] required checks are green on the exact final release head
 - [x] branch/ruleset settings match the intended merge policy
 - [ ] release workflow cannot bypass validation
 
@@ -138,5 +142,7 @@ Only publish the first npm version when the project can answer these questions a
 2. What does it not support yet?
 3. Which physical-device claims are actually verified?
 4. How can a developer test behavior without risking production hardware or data?
+
+For `0.1.0`, the answer to question 3 is intentionally: **no named physical-printer compatibility claim is made**.
 
 Repository visibility changes and npm publication remain explicit maintainer actions. Completing this checklist does not authorize either action automatically.
