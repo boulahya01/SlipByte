@@ -1,5 +1,5 @@
 import type { CapabilitySupport, PrinterCapability } from "./capabilities.js";
-import { OpenReceiptError } from "./errors.js";
+import { SlipByteError } from "./errors.js";
 
 const UNSAFE_COMPATIBILITY_TEXT = /[\u0000-\u001F\u007F]/u;
 
@@ -189,6 +189,6 @@ function isCapabilitySupport(value: unknown): value is CapabilitySupport {
 function invalidEvidence(
   message: string,
   details: Record<string, unknown> = {},
-): OpenReceiptError {
-  return new OpenReceiptError("INVALID_COMPATIBILITY_EVIDENCE", message, details);
+): SlipByteError {
+  return new SlipByteError("INVALID_COMPATIBILITY_EVIDENCE", message, details);
 }
