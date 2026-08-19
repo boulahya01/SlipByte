@@ -1,14 +1,14 @@
-# OpenReceipt Agent Guide
+# SlipByte Agent Guide
 
 This repository is intentionally designed to be easy for coding agents to understand and modify safely.
 
 ## North star
 
-OpenReceipt should make thermal-printer integration feel like using a normal software API, not programming hardware.
+SlipByte should make thermal-printer integration feel like using a normal software API, not programming hardware.
 
 ## Product boundary
 
-OpenReceipt is a printing toolkit, not a restaurant SDK and not a language-specific renderer.
+SlipByte is a printing toolkit, not a restaurant SDK and not a language-specific renderer.
 
 The core must remain:
 
@@ -52,7 +52,7 @@ When adding or changing public APIs:
 
 ## Public repository behavior
 
-OpenReceipt is intended to be developed in public. Commits, issues, PRs, docs, discussions, and comments are part of the long-lived project surface and may be discovered through GitHub, search engines, or AI retrieval systems.
+SlipByte is intended to be developed in public. Commits, issues, PRs, docs, discussions, and comments are part of the long-lived project surface and may be discovered through GitHub, search engines, or AI retrieval systems.
 
 Follow [`docs/MAINTAINER_GUIDE.md`](docs/MAINTAINER_GUIDE.md) for commit quality, issue/PR writing, public discussions, documentation, automation behavior, and the pre-public audit.
 
