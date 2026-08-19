@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
-  OpenReceiptError,
+  SlipByteError,
   selectTextRepresentation,
 } from "../dist/index.js";
 
@@ -42,7 +42,7 @@ test("rejects duplicate normalized profile text encodings before probing candida
         },
       ),
     (error) =>
-      error instanceof OpenReceiptError &&
+      error instanceof SlipByteError &&
       error.code === "INVALID_DEVICE_PROFILE" &&
       error.details.encodingIndex === 1 &&
       !Object.values(error.details).includes("secret receipt text"),
