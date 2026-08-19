@@ -45,17 +45,18 @@ SlipByte is preparing its first npm release. The repository is public, the packa
 
 ### Active release work
 
-- audit release-facing claims and keep software evidence separate from physical-printer evidence
-- validate the first install/import/copy-paste path from the packed `slipbyte` package
-- configure npm trusted publishing/provenance so release publication cannot bypass the full release gate
 - run final exact-release-candidate validation on Node.js 22 and 24
+- explicitly resolve the first-package npm bootstrap constraint before publication
+- keep `0.1.0` publication as an owner-only 2FA action
+- configure stage-only npm trusted publishing immediately after the package exists so later releases require maintainer approval before going live
 
 ### Remaining v0.1 path
 
 - keep the first release free of named physical-printer compatibility claims unless exact device evidence is added
-- configure the release workflow and trusted publishing/provenance
-- run the exact release-candidate clean install, tests, build, package verification, and protected CI checks
+- complete the exact release-candidate clean install, tests, build, package verification, and protected CI checks
+- obtain explicit maintainer acceptance of the first-package bootstrap limitation
 - publish `slipbyte@0.1.0` only after explicit maintainer authorization
+- after the package exists, configure the prepared stage-only OIDC workflow for future releases
 
 USB, serial, Bluetooth, operating-system printer queues, and broader hardware adapters remain post-v0.1 expansion areas unless evidence forces a reprioritization.
 
@@ -228,6 +229,7 @@ GitHub Actions CI is functioning and runs the release-quality gate across Node.j
 - [`docs/PREVIEW.md`](docs/PREVIEW.md) — mock printer and deterministic preview
 - [`docs/DIAGNOSTICS.md`](docs/DIAGNOSTICS.md) — structured failure and retry-safety model
 - [`docs/ROADMAP.md`](docs/ROADMAP.md) — v0.1 engineering sequence
+- [`docs/RELEASING.md`](docs/RELEASING.md) — first-package bootstrap and staged trusted-publishing process
 - [`docs/MAINTAINER_GUIDE.md`](docs/MAINTAINER_GUIDE.md) — public engineering standards
 - [`docs/PUBLIC_RELEASE_CHECKLIST.md`](docs/PUBLIC_RELEASE_CHECKLIST.md) — public-development and npm-release gates
 
