@@ -1,8 +1,8 @@
 # Device Capabilities
 
-OpenReceipt models hardware behavior through explicit capabilities instead of printer-brand conditionals.
+SlipByte models hardware behavior through explicit capabilities instead of printer-brand conditionals.
 
-The initial capability/profile contract is implemented on `main` and sits between application/layout intent and future protocol encoders.
+The capability/profile contract is implemented on `main` and sits between application/layout intent and protocol encoders.
 
 ## Current public contract
 
@@ -105,7 +105,7 @@ The current TypeScript contract requires an explicit state for each declared cap
 
 > lack of evidence must not be presented as evidence of support.
 
-A profile should only make claims backed by documented device behavior, tests, or an explicitly chosen generic policy. Broad compatibility data and richer unknown-evidence semantics must be designed before OpenReceipt presents a compatibility database as authoritative.
+A profile should only make claims backed by documented device behavior, tests, or an explicitly chosen generic policy. Broad compatibility data and richer unknown-evidence semantics must be designed before SlipByte presents a compatibility database as authoritative.
 
 Until then, `unsupported` means the profile explicitly says the operation is unavailable; it must not be used as a shortcut for “we have not researched this device yet.”
 
@@ -143,4 +143,4 @@ A future raw-command API, if introduced, must be isolated from safe print intent
 
 The capability model must not assume one business domain, human language/script, printer brand, protocol, operating system, or transport.
 
-ESC/POS will be the first protocol consumer of this contract, not its definition.
+ESC/POS is the first protocol consumer of this contract, not its definition.
