@@ -1,10 +1,10 @@
 # Security Policy
 
-OpenReceipt interacts with local and network-connected printer hardware. Security reports are taken seriously, especially when they involve device access, network transport, command injection, unsafe parsing, dependency compromise, or unintended data exposure.
+SlipByte interacts with local and network-connected printer hardware. Security reports are taken seriously, especially when they involve device access, network transport, command injection, unsafe parsing, dependency compromise, or unintended data exposure.
 
 ## Supported versions
 
-OpenReceipt is not yet generally released. Until the first stable release, security fixes apply to the latest development version only.
+SlipByte is not yet generally released. Until the first stable release, security fixes apply to the latest development version only.
 
 After releases begin, this section will list supported versions explicitly.
 
@@ -16,7 +16,7 @@ Prefer GitHub's private vulnerability reporting / Security Advisory flow for thi
 
 Please include privately, when available:
 
-- affected OpenReceipt version or commit
+- affected SlipByte version or commit
 - runtime and operating system
 - transport involved (for example TCP or USB)
 - affected printer/profile
@@ -26,7 +26,7 @@ Please include privately, when available:
 
 ## Security principles
 
-OpenReceipt should:
+SlipByte should:
 
 - never require application secrets to be embedded in receipt templates
 - never log receipt contents, credentials, printer addresses, or sensitive payloads by default
@@ -45,4 +45,4 @@ Printer compatibility claims must be evidence-based. A compatible protocol does 
 
 Potentially disruptive actions such as cash-drawer pulses, paper cuts, device resets, firmware-specific commands, or future raw-command escape hatches must be explicit and capability-aware.
 
-OpenReceipt must not claim universal hardware support where behavior has not been tested or documented.
+SlipByte must not claim universal hardware support where behavior has not been tested or documented.
