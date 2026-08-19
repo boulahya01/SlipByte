@@ -3,7 +3,7 @@ import {
   resolveCapability,
   type DeviceProfile,
 } from "./capabilities.js";
-import { OpenReceiptError } from "./errors.js";
+import { SlipByteError } from "./errors.js";
 import { defineRasterImage, type RasterImage } from "./raster.js";
 
 const GS = 0x1d;
@@ -26,7 +26,7 @@ export const ESC_POS_GS_V0_RASTER_ENCODER: EscPosRasterEncoder = Object.freeze({
     const bytesPerRow = Math.ceil(resolvedImage.width / 8);
 
     if (bytesPerRow > 65_535 || resolvedImage.height > 65_535) {
-      throw new OpenReceiptError(
+      throw new SlipByteError(
         "RASTER_ENCODING_FAILED",
         "Raster image exceeds the addressable GS v 0 dimensions.",
         { width: resolvedImage.width, height: resolvedImage.height },
@@ -54,7 +54,7 @@ export function encodeEscPosRaster(
 ): Uint8Array {
   const resolvedProfile = defineDeviceProfile(profile);
   if (resolvedProfile.protocol !== "escpos") {
-    throw new OpenReceiptError(
+    throw new SlipByteError(
       "UNSUPPORTED_PROTOCOL",
       'The ESC/POS raster adapter requires a device profile with protocol "escpos".',
       { profileId: resolvedProfile.id, protocol: resolvedProfile.protocol },
@@ -63,7 +63,7 @@ export function encodeEscPosRaster(
 
   const rasterCapability = resolveCapability(resolvedProfile, "raster");
   if (!rasterCapability.usable) {
-    throw new OpenReceiptError(
+    throw new SlipByteError(
       "UNSUPPORTED_CAPABILITY",
       "The device profile does not support raster output.",
       {
@@ -82,11 +82,11 @@ export function encodeEscPosRaster(
   try {
     encoded = resolvedConfig.encoder.encode(resolvedImage);
   } catch (error) {
-    if (error instanceof OpenReceiptError && error.code === "RASTER_ENCODING_FAILED") {
+    if (error instanceof SlipByteError && error.code === "RASTER_ENCODING_FAILED") {
       throw error;
     }
 
-    throw new OpenReceiptError(
+    throw new SlipByteError(
       "RASTER_ENCODING_FAILED",
       "The configured ESC/POS raster encoder failed.",
       {
@@ -97,7 +97,7 @@ export function encodeEscPosRaster(
   }
 
   if (!(encoded instanceof Uint8Array)) {
-    throw new OpenReceiptError(
+    throw new SlipByteError(
       "RASTER_ENCODING_FAILED",
       "The configured ESC/POS raster encoder must return Uint8Array bytes.",
       {
@@ -115,7 +115,7 @@ function resolveRasterConfig(
   config: EscPosRasterConfig,
 ): EscPosRasterConfig {
   if (typeof config !== "object" || config === null || Array.isArray(config)) {
-    throw new OpenReceiptError(
+    throw new SlipByteError(
       "INVALID_ENCODER_OPTION",
       "ESC/POS raster config must be an object.",
       { receivedType: Array.isArray(config) ? "array" : typeof config },
@@ -124,7 +124,7 @@ function resolveRasterConfig(
 
   const profileId = requireSafeIdentifier(config.profileId, "profileId");
   if (profileId !== profile.id) {
-    throw new OpenReceiptError(
+    throw new SlipByteError(
       "INVALID_ENCODER_OPTION",
       "ESC/POS raster configuration belongs to a different device profile.",
       { profileId: profile.id },
@@ -145,7 +145,7 @@ function resolveRasterEncoder(encoder: EscPosRasterEncoder): EscPosRasterEncoder
     UNSAFE_IDENTIFIER_TEXT.test(encoder.id) ||
     typeof encoder.encode !== "function"
   ) {
-    throw new OpenReceiptError(
+    throw new SlipByteError(
       "INVALID_ENCODER_OPTION",
       "ESC/POS raster encoder must provide a safe non-empty id and encode(image) function.",
     );
@@ -160,7 +160,7 @@ function requireSafeIdentifier(value: unknown, field: string): string {
     !value.trim() ||
     UNSAFE_IDENTIFIER_TEXT.test(value)
   ) {
-    throw new OpenReceiptError(
+    throw new SlipByteError(
       "INVALID_ENCODER_OPTION",
       `ESC/POS raster ${field} must be safe non-empty text.`,
       { field, receivedType: typeof value },
