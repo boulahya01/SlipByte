@@ -3,12 +3,12 @@ import test from "node:test";
 
 import {
   diagnoseError,
-  OpenReceiptError,
+  SlipByteError,
 } from "../dist/index.js";
 
 test("marks pre-write TCP connection failures as safe to retry after remediation", () => {
   const diagnostic = diagnoseError(
-    new OpenReceiptError("TCP_CONNECT_TIMEOUT", "fixture timeout"),
+    new SlipByteError("TCP_CONNECT_TIMEOUT", "fixture timeout"),
   );
 
   assert.deepEqual(diagnostic, {
@@ -33,7 +33,7 @@ test("marks post-connect transport failures as uncertain delivery", () => {
     "TCP_CLOSE_FAILED",
     "TCP_CLOSE_TIMEOUT",
   ]) {
-    const diagnostic = diagnoseError(new OpenReceiptError(code, "fixture failure"));
+    const diagnostic = diagnoseError(new SlipByteError(code, "fixture failure"));
 
     assert.equal(diagnostic.stage, "transport");
     assert.equal(diagnostic.delivery, "uncertain");
@@ -43,7 +43,7 @@ test("marks post-connect transport failures as uncertain delivery", () => {
 
 test("classifies layout failures without exposing error details", () => {
   const diagnostic = diagnoseError(
-    new OpenReceiptError("LAYOUT_OVERFLOW", "fixture", {
+    new SlipByteError("LAYOUT_OVERFLOW", "fixture", {
       receiptText: "sensitive",
     }),
   );
@@ -59,7 +59,7 @@ test("handles unknown failures conservatively", () => {
 
   assert.deepEqual(diagnostic, {
     stage: "unknown",
-    summary: "The failure is not an OpenReceipt structured error.",
+    summary: "The failure is not a SlipByte structured error.",
     retrySafety: "unknown",
     delivery: "unknown",
     remediation: [
