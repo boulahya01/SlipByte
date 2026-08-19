@@ -11,7 +11,7 @@ const DEFAULT_WIDTH = 576;
 const DEFAULT_HEIGHT = 96;
 
 const CASES = Object.freeze([
-  { id: "latin", text: "OpenReceipt 123.45", direction: "ltr" },
+  { id: "latin", text: "SlipByte 123.45", direction: "ltr" },
   { id: "arabic-rtl", text: "مرحبا بالعالم 123", direction: "rtl" },
   { id: "cjk", text: "你好世界 日本語", direction: "ltr" },
   { id: "combining", text: "Cafe\u0301 A\u030A", direction: "ltr" },
@@ -31,9 +31,9 @@ const POPCOUNT = Object.freeze(
   }),
 );
 
-const font = process.env.OPENRECEIPT_UNICODE_FONT?.trim() || DEFAULT_FONT;
-const width = readPositiveIntegerEnv("OPENRECEIPT_UNICODE_WIDTH", DEFAULT_WIDTH);
-const height = readPositiveIntegerEnv("OPENRECEIPT_UNICODE_HEIGHT", DEFAULT_HEIGHT);
+const font = process.env.SLIPBYTE_UNICODE_FONT?.trim() || DEFAULT_FONT;
+const width = readPositiveIntegerEnv("SLIPBYTE_UNICODE_WIDTH", DEFAULT_WIDTH);
+const height = readPositiveIntegerEnv("SLIPBYTE_UNICODE_HEIGHT", DEFAULT_HEIGHT);
 
 let canvasRuntime;
 try {
