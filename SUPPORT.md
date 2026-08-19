@@ -1,12 +1,12 @@
 # Support
 
-OpenReceipt is an open-source developer tool. The project aims to make thermal printing easier, but printer hardware, operating systems, drivers, firmware, and ESC/POS-compatible implementations vary widely.
+SlipByte is an open-source developer tool. The project aims to make thermal printing easier, but printer hardware, operating systems, drivers, firmware, and ESC/POS-compatible implementations vary widely.
 
 ## Before opening an issue
 
 Please include enough information to reproduce the problem:
 
-- OpenReceipt version or commit
+- SlipByte version or commit
 - Node.js version
 - operating system
 - printer manufacturer and exact model
@@ -20,7 +20,7 @@ Do not include customer receipts, credentials, private IPs that should remain se
 
 ## What we can support
 
-We can investigate behavior that belongs to OpenReceipt, such as:
+We can investigate behavior that belongs to SlipByte, such as:
 
 - receipt layout
 - protocol encoding
