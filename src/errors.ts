@@ -1,4 +1,4 @@
-export type OpenReceiptErrorCode =
+export type SlipByteErrorCode =
   | "INVALID_TEXT"
   | "INVALID_QUANTITY"
   | "INVALID_AMOUNT"
@@ -32,18 +32,23 @@ export type OpenReceiptErrorCode =
   | "TCP_CLOSE_FAILED"
   | "TCP_CLOSE_TIMEOUT";
 
-export class OpenReceiptError extends Error {
-  readonly code: OpenReceiptErrorCode;
+export class SlipByteError extends Error {
+  readonly code: SlipByteErrorCode;
   readonly details: Readonly<Record<string, unknown>>;
 
   constructor(
-    code: OpenReceiptErrorCode,
+    code: SlipByteErrorCode,
     message: string,
     details: Record<string, unknown> = {},
   ) {
     super(message);
-    this.name = "OpenReceiptError";
+    this.name = "SlipByteError";
     this.code = code;
     this.details = Object.freeze({ ...details });
   }
 }
+
+/** @deprecated Internal migration alias. Import SlipByteError from the package root. */
+export const OpenReceiptError = SlipByteError;
+/** @deprecated Internal migration alias. Use SlipByteErrorCode. */
+export type OpenReceiptErrorCode = SlipByteErrorCode;
