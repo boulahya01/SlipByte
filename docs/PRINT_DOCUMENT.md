@@ -1,6 +1,6 @@
 # Print document contract
 
-OpenReceipt uses a versioned JSON-compatible document as the durable boundary between application intent and lower printing layers.
+SlipByte uses a versioned JSON-compatible document as the durable boundary between application intent and lower printing layers.
 
 The contract is deliberately independent of ESC/POS, TCP, USB, operating-system print queues, printer brands, and paper width. Layout and capability resolution happen after the application has expressed what it wants to print.
 
