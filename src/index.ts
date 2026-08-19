@@ -114,6 +114,8 @@ export {
   previewLayout,
 } from "./preview.js";
 export type { MockPrintResult } from "./preview.js";
+export { printEscPosTcp } from "./print.js";
+export type { EscPosTcpPrintOptions } from "./print.js";
 export { ReceiptBuilder, receipt } from "./receipt.js";
 export type {
   Alignment,
