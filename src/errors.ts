@@ -47,10 +47,3 @@ export class SlipByteError extends Error {
     this.details = Object.freeze({ ...details });
   }
 }
-
-/** @deprecated Internal migration alias. Import SlipByteError from the package root. */
-export const OpenReceiptError = SlipByteError;
-/** @deprecated Internal migration alias. Use SlipByteError. */
-export type OpenReceiptError = SlipByteError;
-/** @deprecated Internal migration alias. Use SlipByteErrorCode. */
-export type OpenReceiptErrorCode = SlipByteErrorCode;
