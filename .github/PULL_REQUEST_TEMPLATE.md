@@ -16,8 +16,11 @@ What developer or maintainer problem does this change address?
 
 ## Architecture check
 
-- [ ] receipt intent is not coupled to transport code
-- [ ] protocol encoding is not coupled to sockets / USB / OS queues
+- [ ] print intent/document remains separate from layout
+- [ ] device profile/capabilities remain separate from application business logic
+- [ ] representation selection remains separate from protocol commands
+- [ ] protocol encoding remains separate from TCP / USB / OS queue transports
+- [ ] preview/mock reuses the real document/layout path rather than duplicating device behavior
 - [ ] application-facing behavior is capability-driven rather than brand-driven
 - [ ] hardware-specific behavior is isolated and documented
 
