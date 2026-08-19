@@ -1,4 +1,4 @@
-import { OpenReceiptError } from "./errors.js";
+import { SlipByteError } from "./errors.js";
 
 const UNSAFE_IDENTIFIER_TEXT = /[\u0000-\u001F\u007F]/u;
 const UNSAFE_METADATA_TEXT = /[\u0000-\u001F\u007F]/u;
@@ -36,7 +36,7 @@ export type CapabilityResolution = Readonly<{
 export function defineDeviceProfile(profile: DeviceProfile): DeviceProfile {
   const candidate = profile as Partial<DeviceProfile> | null;
   if (candidate === null || typeof candidate !== "object" || Array.isArray(candidate)) {
-    throw new OpenReceiptError(
+    throw new SlipByteError(
       "INVALID_DEVICE_PROFILE",
       "Device profile must be an object.",
       { receivedType: Array.isArray(candidate) ? "array" : typeof candidate },
@@ -44,7 +44,7 @@ export function defineDeviceProfile(profile: DeviceProfile): DeviceProfile {
   }
 
   if (typeof candidate.id !== "string") {
-    throw new OpenReceiptError(
+    throw new SlipByteError(
       "INVALID_DEVICE_PROFILE",
       "Device profiles require a text id.",
       { receivedType: typeof candidate.id },
@@ -53,14 +53,14 @@ export function defineDeviceProfile(profile: DeviceProfile): DeviceProfile {
 
   const id = candidate.id.trim();
   if (!id || UNSAFE_IDENTIFIER_TEXT.test(id)) {
-    throw new OpenReceiptError(
+    throw new SlipByteError(
       "INVALID_DEVICE_PROFILE",
       "Device profiles require a safe non-empty id.",
     );
   }
 
   if (typeof candidate.protocol !== "string") {
-    throw new OpenReceiptError(
+    throw new SlipByteError(
       "INVALID_DEVICE_PROFILE",
       "Device profiles require a text protocol identifier.",
       { receivedType: typeof candidate.protocol },
@@ -69,7 +69,7 @@ export function defineDeviceProfile(profile: DeviceProfile): DeviceProfile {
 
   const protocol = candidate.protocol.trim();
   if (!protocol || UNSAFE_IDENTIFIER_TEXT.test(protocol)) {
-    throw new OpenReceiptError(
+    throw new SlipByteError(
       "INVALID_DEVICE_PROFILE",
       "Device profiles require a safe non-empty protocol identifier.",
     );
@@ -80,7 +80,7 @@ export function defineDeviceProfile(profile: DeviceProfile): DeviceProfile {
     typeof candidate.capabilities !== "object" ||
     Array.isArray(candidate.capabilities)
   ) {
-    throw new OpenReceiptError(
+    throw new SlipByteError(
       "INVALID_DEVICE_PROFILE",
       "Device profiles require a capabilities object.",
       {
@@ -95,7 +95,7 @@ export function defineDeviceProfile(profile: DeviceProfile): DeviceProfile {
   for (const capability of CAPABILITIES) {
     const support = candidate.capabilities[capability];
     if (!isCapabilitySupport(support)) {
-      throw new OpenReceiptError(
+      throw new SlipByteError(
         "INVALID_DEVICE_PROFILE",
         "Every device capability must be native, fallback, or unsupported.",
         {
@@ -110,7 +110,7 @@ export function defineDeviceProfile(profile: DeviceProfile): DeviceProfile {
   let textEncodings: readonly string[] | undefined;
   if (candidate.textEncodings !== undefined) {
     if (!Array.isArray(candidate.textEncodings)) {
-      throw new OpenReceiptError(
+      throw new SlipByteError(
         "INVALID_DEVICE_PROFILE",
         "textEncodings must be an array when provided.",
         { profileId: id, receivedType: typeof candidate.textEncodings },
@@ -120,7 +120,7 @@ export function defineDeviceProfile(profile: DeviceProfile): DeviceProfile {
     const seenTextEncodings = new Set<string>();
     textEncodings = candidate.textEncodings.map((encoding, index) => {
       if (typeof encoding !== "string") {
-        throw new OpenReceiptError(
+        throw new SlipByteError(
           "INVALID_DEVICE_PROFILE",
           "textEncodings entries must be text identifiers.",
           { profileId: id, encodingIndex: index, receivedType: typeof encoding },
@@ -129,7 +129,7 @@ export function defineDeviceProfile(profile: DeviceProfile): DeviceProfile {
 
       const normalized = encoding.trim();
       if (!normalized || UNSAFE_IDENTIFIER_TEXT.test(normalized)) {
-        throw new OpenReceiptError(
+        throw new SlipByteError(
           "INVALID_DEVICE_PROFILE",
           "textEncodings entries must be safe non-empty text identifiers.",
           { profileId: id, encodingIndex: index },
@@ -137,7 +137,7 @@ export function defineDeviceProfile(profile: DeviceProfile): DeviceProfile {
       }
 
       if (seenTextEncodings.has(normalized)) {
-        throw new OpenReceiptError(
+        throw new SlipByteError(
           "INVALID_DEVICE_PROFILE",
           "textEncodings entries must be unique after normalization.",
           { profileId: id, encodingIndex: index },
@@ -152,7 +152,7 @@ export function defineDeviceProfile(profile: DeviceProfile): DeviceProfile {
   let notes: readonly string[] | undefined;
   if (candidate.notes !== undefined) {
     if (!Array.isArray(candidate.notes)) {
-      throw new OpenReceiptError(
+      throw new SlipByteError(
         "INVALID_DEVICE_PROFILE",
         "Device profile notes must be an array when provided.",
         { profileId: id, receivedType: typeof candidate.notes },
@@ -161,7 +161,7 @@ export function defineDeviceProfile(profile: DeviceProfile): DeviceProfile {
 
     notes = candidate.notes.map((note, index) => {
       if (typeof note !== "string") {
-        throw new OpenReceiptError(
+        throw new SlipByteError(
           "INVALID_DEVICE_PROFILE",
           "Device profile notes must contain text values.",
           { profileId: id, noteIndex: index, receivedType: typeof note },
@@ -169,7 +169,7 @@ export function defineDeviceProfile(profile: DeviceProfile): DeviceProfile {
       }
 
       if (UNSAFE_METADATA_TEXT.test(note)) {
-        throw new OpenReceiptError(
+        throw new SlipByteError(
           "INVALID_DEVICE_PROFILE",
           "Device profile notes contain an unsafe control character.",
           { profileId: id, noteIndex: index },
@@ -210,7 +210,7 @@ export function requireCapability(
   const resolution = resolveCapability(profile, capability);
 
   if (!resolution.usable) {
-    throw new OpenReceiptError(
+    throw new SlipByteError(
       "UNSUPPORTED_CAPABILITY",
       `Device profile ${profile.id} does not support ${capability}.`,
       {
