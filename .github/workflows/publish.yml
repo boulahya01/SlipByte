@@ -1,0 +1,64 @@
+name: Stage npm release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing release tag to stage (for example v0.2.0)
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  stage:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout release tag
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.tag }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          registry-url: https://registry.npmjs.org
+          package-manager-cache: false
+
+      - name: Verify release ref
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if ! git show-ref --verify --quiet "refs/tags/${{ inputs.tag }}"; then
+            echo "Input must name an existing Git tag."
+            exit 1
+          fi
+
+          version="$(node -p "JSON.parse(require('fs').readFileSync('package.json', 'utf8')).version")"
+          expected_tag="v${version}"
+
+          if [ "${{ inputs.tag }}" != "$expected_tag" ]; then
+            echo "Tag ${{ inputs.tag }} does not match package version ${version}. Expected ${expected_tag}."
+            exit 1
+          fi
+
+          git fetch --no-tags origin main:refs/remotes/origin/main
+          if ! git merge-base --is-ancestor HEAD origin/main; then
+            echo "Release tag must point to a commit already contained in main."
+            exit 1
+          fi
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check release package
+        run: npm run release:check
+
+      - name: Stage package on npm
+        run: npm stage publish
