@@ -4,7 +4,7 @@ import test from "node:test";
 import {
   defineDeviceProfile,
   encodeEscPos,
-  OpenReceiptError,
+  SlipByteError,
 } from "../dist/index.js";
 
 const capabilities = {
@@ -92,7 +92,7 @@ test("rejects text encoding configuration for another device profile before enco
       }),
     }),
     (error) =>
-      error instanceof OpenReceiptError &&
+      error instanceof SlipByteError &&
       error.code === "INVALID_ENCODER_OPTION" &&
       !("text" in error.details),
   );
@@ -108,7 +108,7 @@ test("rejects encodings not declared by the device profile", () => {
         encoder: { id: "undeclared", encode: () => Uint8Array.from([1]) },
       }),
     }),
-    (error) => error instanceof OpenReceiptError && error.code === "INVALID_ENCODER_OPTION",
+    (error) => error instanceof SlipByteError && error.code === "INVALID_ENCODER_OPTION",
   );
 });
 
@@ -121,7 +121,7 @@ test("rejects invalid code-page values and mismatched encoder ids", () => {
   ]) {
     assert.throws(
       () => encodeEscPos(textLayout, profile(), { textEncoding: config }),
-      (error) => error instanceof OpenReceiptError && error.code === "INVALID_ENCODER_OPTION",
+      (error) => error instanceof SlipByteError && error.code === "INVALID_ENCODER_OPTION",
     );
   }
 });
@@ -132,6 +132,6 @@ test("rejects ambiguous text encoder configuration", () => {
       textEncoder: { id: "fixture-page", encode: () => Uint8Array.from([1]) },
       textEncoding: encodingConfig(),
     }),
-    (error) => error instanceof OpenReceiptError && error.code === "INVALID_ENCODER_OPTION",
+    (error) => error instanceof SlipByteError && error.code === "INVALID_ENCODER_OPTION",
   );
 });
