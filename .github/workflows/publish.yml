@@ -35,6 +35,16 @@ jobs:
         run: |
           set -euo pipefail
 
+          npm_version="$(npm --version)"
+          npm_major="${npm_version%%.*}"
+          npm_rest="${npm_version#*.}"
+          npm_minor="${npm_rest%%.*}"
+
+          if (( npm_major < 11 || (npm_major == 11 && npm_minor < 15) )); then
+            echo "npm stage publish requires npm 11.15.0 or newer; found ${npm_version}."
+            exit 1
+          fi
+
           if ! git show-ref --verify --quiet "refs/tags/${{ inputs.tag }}"; then
             echo "Input must name an existing Git tag."
             exit 1
