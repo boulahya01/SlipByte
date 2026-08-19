@@ -25,7 +25,7 @@ function verifyPackage() {
   const dryRunReport = parsePackReport(dryRun.stdout);
   verifyPackageShape(dryRunReport);
 
-  const tempRoot = mkdtempSync(join(tmpdir(), "openreceipt-package-"));
+  const tempRoot = mkdtempSync(join(tmpdir(), "slipbyte-package-"));
   try {
     const packed = run(npmCommand, [
       "pack",
@@ -67,12 +67,12 @@ function verifyPackage() {
         "--input-type=module",
         "--eval",
         [
-          `import * as openreceipt from ${JSON.stringify(packageName)};`,
+          `import * as slipbyte from ${JSON.stringify(packageName)};`,
           'for (const name of ["receipt", "layoutReceipt", "createPrintDocument", "encodeEscPos", "sendTcp", "mockPrint", "diagnoseError"]) {',
-          '  if (typeof openreceipt[name] !== "function") throw new Error(`Missing package export: ${name}`);',
+          '  if (typeof slipbyte[name] !== "function") throw new Error(`Missing package export: ${name}`);',
           "}",
-          'const document = openreceipt.receipt().title("My Store").item("Coffee", 2, 30).total("TOTAL", 60).cut().toDocument();',
-          'const result = openreceipt.mockPrint(document, { paper: "80mm" });',
+          'const document = slipbyte.receipt().title("My Store").item("Coffee", 2, 30).total("TOTAL", 60).cut().toDocument();',
+          'const result = slipbyte.mockPrint(document, { paper: "80mm" });',
           'for (const expected of ["My Store", "Coffee", "TOTAL", "60.00", "[cut]"]) {',
           '  if (!result.preview.includes(expected)) throw new Error(`Installed-package preview is missing: ${expected}`);',
           "}",
