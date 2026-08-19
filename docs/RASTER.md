@@ -1,6 +1,6 @@
 # Raster fallback
 
-OpenReceipt treats raster output as a separate representation path after Unicode text/layout decisions. Raster fallback is explicit, capability-aware, and protocol-specific only at the final adapter boundary.
+SlipByte treats raster output as a separate representation path after Unicode text/layout decisions. Raster fallback is explicit, capability-aware, and protocol-specific only at the final adapter boundary.
 
 ## Generic raster image
 
@@ -20,7 +20,7 @@ This format is protocol-agnostic. It does not imply ESC/POS, printer dot density
 
 ## Text rendering boundary
 
-`renderTextToRaster(text, renderer)` accepts an injected `RasterTextRenderer`. The renderer owns font selection, shaping, bidi handling, glyph rasterization, and any script-specific requirements. OpenReceipt validates the returned bitmap and wraps failures without copying receipt text or arbitrary renderer errors into structured diagnostics.
+`renderTextToRaster(text, renderer)` accepts an injected `RasterTextRenderer`. The renderer owns font selection, shaping, bidi handling, glyph rasterization, and any script-specific requirements. SlipByte validates the returned bitmap and wraps failures without copying receipt text or arbitrary renderer errors into structured diagnostics.
 
 The core intentionally does not ship a guessed universal font/shaper. Arabic/RTL, CJK, combining marks, emoji, and mixed-script text remain conformance inputs for renderer implementations rather than separate receipt APIs.
 
@@ -35,7 +35,7 @@ The core intentionally does not ship a guessed universal font/shaper. Arabic/RTL
 
 There is no default raster command.
 
-OpenReceipt includes `ESC_POS_GS_V0_RASTER_ENCODER` as one explicitly named strategy for devices whose reviewed compatibility data says that command is appropriate. It is never selected automatically. The ESC/POS reference marks `GS v 0` as obsolete and recommends the newer graphics-function family for supported devices, so future adapters can add newer strategy implementations without changing the generic raster contract.
+SlipByte includes `ESC_POS_GS_V0_RASTER_ENCODER` as one explicitly named strategy for devices whose reviewed compatibility data says that command is appropriate. It is never selected automatically. The ESC/POS reference marks `GS v 0` as obsolete and recommends the newer graphics-function family for supported devices, so future adapters can add newer strategy implementations without changing the generic raster contract.
 
 A different strategy can be injected:
 
