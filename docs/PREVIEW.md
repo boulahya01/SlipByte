@@ -1,6 +1,6 @@
 # Mock printing and preview
 
-OpenReceipt provides a hardware-free path for receipt development and tests without introducing a second layout engine.
+SlipByte provides a hardware-free path for receipt development and tests without introducing a second layout engine.
 
 ## API
 
