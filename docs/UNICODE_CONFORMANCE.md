@@ -1,26 +1,26 @@
 # Unicode raster conformance
 
-OpenReceipt keeps Unicode document intent separate from printer-native encodings and raster rendering. The generic Canvas raster adapter can render arbitrary Unicode through a real Canvas2D text engine, but actual glyph coverage and shaping depend on the runtime and fonts configured by the application.
+SlipByte keeps Unicode document intent separate from printer-native encodings and raster rendering. The generic Canvas raster adapter can render arbitrary Unicode through a real Canvas2D text engine, but actual glyph coverage and shaping depend on the runtime and fonts configured by the application.
 
 The optional conformance runner provides a repeatable software smoke test for that runtime boundary.
 
 ## Run it
 
-Build OpenReceipt, install a Canvas2D runtime locally, then run:
+Build SlipByte, install a Canvas2D runtime locally, then run:
 
 ```sh
 npm install --no-save @napi-rs/canvas
 npm run conformance:unicode
 ```
 
-The runner is intentionally not part of `npm run check` and `@napi-rs/canvas` is not a runtime dependency of OpenReceipt. Applications remain free to inject another compatible Canvas2D implementation.
+The runner is intentionally not part of `npm run check` and `@napi-rs/canvas` is not a runtime dependency of SlipByte. Applications remain free to inject another compatible Canvas2D implementation.
 
 You can override the Canvas font and raster dimensions:
 
 ```sh
-OPENRECEIPT_UNICODE_FONT="32px Noto Sans" \
-OPENRECEIPT_UNICODE_WIDTH=576 \
-OPENRECEIPT_UNICODE_HEIGHT=96 \
+SLIPBYTE_UNICODE_FONT="32px Noto Sans" \
+SLIPBYTE_UNICODE_WIDTH=576 \
+SLIPBYTE_UNICODE_HEIGHT=96 \
 npm run conformance:unicode
 ```
 
@@ -52,4 +52,6 @@ Therefore:
 - use exact, versioned runtime/font fixtures when deterministic visual regression testing is required;
 - keep real-printer raster-command compatibility evidence separate from software text rendering evidence.
 
-This runner exists to make the runtime/font boundary observable and repeatable without weakening OpenReceipt's hardware-agnostic core.
+The completed v0.1 conformance run used `@napi-rs/canvas@1.0.7` and produced non-blank output for all six representative fixtures, including Arabic/RTL after the Canvas alignment fix. That evidence is intentionally scoped to the tested software runtime/font configuration.
+
+This runner exists to make the runtime/font boundary observable and repeatable without weakening SlipByte's hardware-agnostic core.
