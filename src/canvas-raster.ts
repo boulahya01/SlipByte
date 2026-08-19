@@ -24,6 +24,7 @@ export type Canvas2DContextLike = {
   font: string;
   fillStyle: string;
   textBaseline: string;
+  textAlign?: "left" | "right" | "center" | "start" | "end";
   direction?: CanvasTextDirection;
   fillRect(x: number, y: number, width: number, height: number): void;
   fillText(text: string, x: number, y: number): void;
@@ -84,6 +85,7 @@ export function createCanvasRasterTextRenderer(
         context.font = resolved.font;
         context.fillStyle = "#000000";
         context.textBaseline = "top";
+        context.textAlign = "left";
         context.direction = resolved.direction;
         context.fillText(text, resolved.x, resolved.y);
       } catch {
