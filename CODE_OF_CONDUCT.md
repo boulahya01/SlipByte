@@ -28,3 +28,5 @@ The project does not accept:
 Maintainers may edit, hide, lock, or remove content and may restrict participation when necessary to protect contributors or the project.
 
 If a conduct issue involves a maintainer, use an appropriate private GitHub reporting mechanism where available rather than escalating sensitive details publicly.
+
+The goal of enforcement is to keep SlipByte safe, constructive, and useful for the people building and using it.
