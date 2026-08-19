@@ -4,11 +4,11 @@ import test from "node:test";
 import {
   createPrintDocument,
   deserializePrintDocument,
-  OpenReceiptError,
   parsePrintDocument,
   PRINT_DOCUMENT_VERSION,
   receipt,
   serializePrintDocument,
+  SlipByteError,
 } from "../dist/index.js";
 
 test("creates a versioned serializable document from receipt intent", () => {
@@ -37,7 +37,7 @@ test("rejects unsupported versions explicitly", () => {
   assert.throws(
     () => parsePrintDocument({ version: 2, nodes: [] }),
     (error) =>
-      error instanceof OpenReceiptError &&
+      error instanceof SlipByteError &&
       error.code === "UNSUPPORTED_DOCUMENT_VERSION" &&
       error.details.version === 2,
   );
@@ -50,7 +50,7 @@ test("rejects malformed nodes without leaking text content", () => {
       nodes: [{ type: "text", value: "secret\u001b@", align: "left", bold: false }],
     }),
     (error) =>
-      error instanceof OpenReceiptError &&
+      error instanceof SlipByteError &&
       error.code === "INVALID_PRINT_DOCUMENT" &&
       error.details.index === 0 &&
       error.details.field === "value" &&
@@ -62,6 +62,6 @@ test("rejects invalid serialized JSON with a stable error", () => {
   assert.throws(
     () => deserializePrintDocument("{not-json}"),
     (error) =>
-      error instanceof OpenReceiptError && error.code === "INVALID_PRINT_DOCUMENT",
+      error instanceof SlipByteError && error.code === "INVALID_PRINT_DOCUMENT",
   );
 });
