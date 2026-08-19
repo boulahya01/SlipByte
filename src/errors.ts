@@ -1,4 +1,4 @@
-export type OpenReceiptErrorCode =
+export type SlipByteErrorCode =
   | "INVALID_TEXT"
   | "INVALID_QUANTITY"
   | "INVALID_AMOUNT"
@@ -32,18 +32,23 @@ export type OpenReceiptErrorCode =
   | "TCP_CLOSE_FAILED"
   | "TCP_CLOSE_TIMEOUT";
 
-export class OpenReceiptError extends Error {
-  readonly code: OpenReceiptErrorCode;
+export class SlipByteError extends Error {
+  readonly code: SlipByteErrorCode;
   readonly details: Readonly<Record<string, unknown>>;
 
   constructor(
-    code: OpenReceiptErrorCode,
+    code: SlipByteErrorCode,
     message: string,
     details: Record<string, unknown> = {},
   ) {
     super(message);
-    this.name = "OpenReceiptError";
+    this.name = "SlipByteError";
     this.code = code;
     this.details = Object.freeze({ ...details });
   }
 }
+
+// Internal bridge for implementation modules that have not yet been mechanically
+// renamed. This symbol is intentionally not exported from the package root.
+export const OpenReceiptError = SlipByteError;
+export type OpenReceiptError = SlipByteError;

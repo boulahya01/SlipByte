@@ -1,20 +1,20 @@
-# OpenReceipt
+# SlipByte
 
 > Thermal printing should feel like using a normal software API, not programming hardware.
 
-OpenReceipt is an open-source, TypeScript-first toolkit for building predictable printing workflows around thermal printers and related hardware.
+SlipByte is an open-source, TypeScript-first toolkit for building predictable printing workflows around thermal printers and related hardware.
 
 It is designed for both developers and AI coding agents: strong types, deterministic layout, structured errors, explicit device capabilities, and as little printer-specific knowledge as possible in application code.
 
 ## Product boundary
 
-OpenReceipt starts with thermal receipt printing because that is the concrete problem being solved first. The core is **not tied to one business domain, human language/script, printer brand, protocol, operating system, or transport**.
+SlipByte starts with thermal receipt printing because that is the concrete problem being solved first. The core is **not tied to one business domain, human language/script, printer brand, protocol, operating system, or transport**.
 
 Restaurants, retail, Arabic/RTL, CJK, emoji, Epson-compatible devices, TCP, and USB are use cases or conformance cases—not hard-coded product modes.
 
 ## Status
 
-OpenReceipt is in early development. The repository is intended to be developed in public before the first npm release so architecture decisions, real printing problems, tests, and compatibility evidence can remain inspectable.
+SlipByte is in early development and has not yet published its first npm release. The repository is intended to be developed in public so architecture decisions, real printing problems, tests, and compatibility evidence can remain inspectable.
 
 ### Implemented on `main`
 
@@ -37,35 +37,40 @@ OpenReceipt is in early development. The repository is intended to be developed 
 - canonical packed monochrome raster-image contract
 - explicit ESC/POS raster strategy boundary; no universal graphics command is assumed
 - Canvas2D Unicode-to-raster adapter with explicit RTL/LTR direction and deterministic monochrome conversion
+- real `@napi-rs/canvas` conformance evidence for Latin, Arabic/RTL, CJK, combining marks, emoji, and mixed-script non-blank rendering
+- package/release verification with clean install, build, runtime import, declaration-consumer, and packed-artifact checks
+- GitHub Actions CI across Node.js 22 and 24
 - input/runtime validation designed to avoid leaking receipt content through structured diagnostics
 - public contribution, security, support, and maintainer policies
 
-### Active work
+### Active release work
 
-- real Canvas runtime/font conformance for Arabic/RTL, CJK, combining marks, emoji, and mixed-script raster fallback
-- GitHub Actions startup blocker investigation and release-quality CI restoration
-- v0.1 package/release hardening and real physical-printer validation
+- complete the project/package identity migration to SlipByte
+- confirm exact npm registry ownership for `slipbyte`
+- record end-to-end physical-printer evidence for the release target without broadening compatibility claims beyond what was actually tested
+- complete the public-release audit
+- configure npm provenance/trusted publishing for the first release workflow
 
 ### Remaining v0.1 path
 
-- finish Unicode raster conformance with evidence from an actual text-rendering runtime/font configuration
-- restore normal CI execution and run exact release-head checks
-- audit package contents and reproducible install/release behavior
-- validate the end-to-end path on physical thermal printers with exact model/environment evidence
+- finish the SlipByte identity migration and exact registry ownership check
+- validate the end-to-end path on a physical thermal printer with exact model/environment evidence
 - complete the public-release audit
+- configure the release workflow so publication cannot bypass `release:check`
+- bump from `0.0.0-dev` to the intended v0.1 semver only on the exact release head
 - publish the first npm release only after explicit maintainer authorization
 
 USB, serial, Bluetooth, operating-system printer queues, and broader hardware adapters remain post-v0.1 expansion areas unless evidence forces a reprioritization.
 
 The project does **not** currently claim broad physical-printer compatibility.
 
-## What OpenReceipt wants to fix
+## What SlipByte wants to fix
 
 Printing is fragmented across layout, printer protocols, hardware quirks, text encoding, network/USB connections, operating-system behavior, device capabilities, and inconsistent errors.
 
 Developers should not need to become printer-protocol experts to ship a reliable application. AI coding agents should not need to infer hardware support from a brand name or copy undocumented raw bytes from old examples.
 
-OpenReceipt aims to provide one clear application-facing model while keeping device-specific concerns modular internally.
+SlipByte aims to provide one clear application-facing model while keeping device-specific concerns modular internally.
 
 ## Architecture
 
@@ -95,10 +100,10 @@ See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the layer boundaries.
 
 ## Try the implemented API
 
-The current package already has a hardware-free path that exercises the real receipt and layout pipeline. This example uses only exported APIs that exist today:
+The current package has a hardware-free path that exercises the real receipt and layout pipeline. The npm package has not been published yet, but this is the intended installed-package API:
 
 ```ts
-import { mockPrint, receipt } from "openreceipt";
+import { mockPrint, receipt } from "slipbyte";
 
 const document = receipt()
   .title("My Store")
@@ -121,7 +126,7 @@ See [`docs/PREVIEW.md`](docs/PREVIEW.md) for preview semantics and testing guida
 The implemented lower-level path now covers document construction, layout, capability resolution, preview/mock output, native/raster representation selection, ESC/POS encoding, diagnostics, and raw TCP delivery. The complete high-level printer API shown below is still the target developer experience, **not a released API**:
 
 ```ts
-import { createPrinter, receipt, tcp } from "openreceipt";
+import { createPrinter, receipt, tcp } from "slipbyte";
 
 const printer = createPrinter({
   transport: tcp({ host: "192.168.1.50" }),
@@ -171,7 +176,7 @@ See [`docs/CAPABILITIES.md`](docs/CAPABILITIES.md) and [`docs/COMPATIBILITY.md`]
 
 ## Unicode and raster fallback
 
-OpenReceipt now has an explicit representation boundary:
+SlipByte has an explicit representation boundary:
 
 ```text
 Unicode layout
@@ -182,7 +187,7 @@ Unicode layout
 
 The generic raster contract is protocol-independent. A Canvas2D adapter can shape/render Unicode through an injected graphics runtime and convert the resulting RGBA pixels into the canonical 1-bit bitmap format. Actual glyph coverage, shaping, bidi behavior, and emoji support remain properties of the selected runtime and fonts and must be validated rather than assumed.
 
-See [`docs/TEXT_REPRESENTATION.md`](docs/TEXT_REPRESENTATION.md), [`docs/RASTER.md`](docs/RASTER.md), and [`docs/CANVAS_RASTER.md`](docs/CANVAS_RASTER.md).
+See [`docs/TEXT_REPRESENTATION.md`](docs/TEXT_REPRESENTATION.md), [`docs/RASTER.md`](docs/RASTER.md), [`docs/CANVAS_RASTER.md`](docs/CANVAS_RASTER.md), and [`docs/UNICODE_CONFORMANCE.md`](docs/UNICODE_CONFORMANCE.md).
 
 ## For AI coding agents
 
@@ -194,7 +199,7 @@ Machine-readable capability/profile data is preferred over prose-only brand comp
 
 ## Public development
 
-OpenReceipt treats repository history as part of the project:
+SlipByte treats repository history as part of the project:
 
 - commits record meaningful engineering changes, not automation checkpoints;
 - issues preserve real developer/hardware problems and their final technical findings;
@@ -207,7 +212,7 @@ See [`docs/MAINTAINER_GUIDE.md`](docs/MAINTAINER_GUIDE.md) and [`docs/ROADMAP.md
 
 ## CI status
 
-GitHub Actions currently has a startup/infrastructure blocker tracked in issue #8. A workflow that never starts is **not** treated as passing CI. Focused executable validation may support development while that infrastructure issue is isolated, but functioning CI remains a release-quality gate before the first npm release.
+GitHub Actions CI is functioning and runs the release-quality gate across Node.js 22 and 24 using `npm ci` followed by `npm run release:check`. A successful CI run validates the software/package contract; it does not substitute for physical-printer evidence.
 
 ## Documentation
 
@@ -221,6 +226,7 @@ GitHub Actions currently has a startup/infrastructure blocker tracked in issue #
 - [`docs/TEXT_REPRESENTATION.md`](docs/TEXT_REPRESENTATION.md) — native/raster selection rules
 - [`docs/RASTER.md`](docs/RASTER.md) — canonical raster image and protocol adapter boundary
 - [`docs/CANVAS_RASTER.md`](docs/CANVAS_RASTER.md) — Canvas2D Unicode raster adapter
+- [`docs/UNICODE_CONFORMANCE.md`](docs/UNICODE_CONFORMANCE.md) — real Canvas runtime/font conformance boundary
 - [`docs/TCP.md`](docs/TCP.md) — raw TCP transport contract and failure semantics
 - [`docs/PREVIEW.md`](docs/PREVIEW.md) — mock printer and deterministic preview
 - [`docs/DIAGNOSTICS.md`](docs/DIAGNOSTICS.md) — structured failure and retry-safety model
@@ -230,7 +236,7 @@ GitHub Actions currently has a startup/infrastructure blocker tracked in issue #
 
 ## Compatibility policy
 
-OpenReceipt does not claim that every printer labeled `ESC/POS compatible` supports every feature.
+SlipByte does not claim that every printer labeled `ESC/POS compatible` supports every feature.
 
 Compatibility should be based on tested capabilities and documented device/profile evidence. Unsupported behavior should fail explicitly or use a documented safe fallback rather than silently corrupting output.
 

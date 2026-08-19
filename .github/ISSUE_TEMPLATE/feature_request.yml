@@ -1,12 +1,12 @@
 name: Feature request
-description: Propose a focused improvement to OpenReceipt
+description: Propose a focused improvement to SlipByte
 title: "[Feature]: "
 labels: []
 body:
   - type: markdown
     attributes:
       value: |
-        OpenReceipt favors small, composable improvements that make thermal printing easier without collapsing receipt, protocol, profile, and transport layers together.
+        SlipByte favors small, composable improvements that make thermal printing easier without collapsing document, layout, profile/capabilities, representation selection, protocol encoding, and transport layers together.
   - type: textarea
     id: problem
     attributes:
@@ -25,9 +25,10 @@ body:
     attributes:
       label: Main layer
       options:
-        - Receipt API
+        - Receipt / print document
         - Layout
         - Printer profile / capabilities
+        - Representation selection
         - ESC/POS encoding
         - Transport
         - Mock / preview

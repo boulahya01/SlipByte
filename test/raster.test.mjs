@@ -7,7 +7,7 @@ import {
   diagnoseError,
   encodeEscPosRaster,
   ESC_POS_GS_V0_RASTER_ENCODER,
-  OpenReceiptError,
+  SlipByteError,
   renderTextToRaster,
 } from "../dist/index.js";
 
@@ -56,7 +56,7 @@ test("rejects malformed raster dimensions, byte counts, and non-zero padding bit
   ]) {
     assert.throws(
       () => defineRasterImage(value),
-      (error) => error instanceof OpenReceiptError && error.code === "INVALID_RASTER_IMAGE",
+      (error) => error instanceof SlipByteError && error.code === "INVALID_RASTER_IMAGE",
     );
   }
 });
@@ -79,7 +79,7 @@ test("renders text through an injected renderer without exposing receipt text on
       },
     }),
     (error) =>
-      error instanceof OpenReceiptError &&
+      error instanceof SlipByteError &&
       error.code === "RASTER_RENDER_FAILED" &&
       !Object.values(error.details).includes("secret receipt text") &&
       !("cause" in error.details),
@@ -116,7 +116,7 @@ test("requires raster capability and exact profile ownership", () => {
       { profileId: "fixture-escpos", encoder: ESC_POS_GS_V0_RASTER_ENCODER },
     ),
     (error) =>
-      error instanceof OpenReceiptError &&
+      error instanceof SlipByteError &&
       error.code === "UNSUPPORTED_CAPABILITY" &&
       error.details.capability === "raster",
   );
@@ -126,7 +126,7 @@ test("requires raster capability and exact profile ownership", () => {
       profileId: "other-profile",
       encoder: ESC_POS_GS_V0_RASTER_ENCODER,
     }),
-    (error) => error instanceof OpenReceiptError && error.code === "INVALID_ENCODER_OPTION",
+    (error) => error instanceof SlipByteError && error.code === "INVALID_ENCODER_OPTION",
   );
 });
 
@@ -147,7 +147,7 @@ test("keeps raster strategy injectable instead of assuming GS v 0", () => {
 
 test("diagnoses raster failures before transport", () => {
   const diagnostic = diagnoseError(
-    new OpenReceiptError("RASTER_ENCODING_FAILED", "fixture"),
+    new SlipByteError("RASTER_ENCODING_FAILED", "fixture"),
   );
 
   assert.equal(diagnostic.stage, "encoding");

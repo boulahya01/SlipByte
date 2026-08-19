@@ -1,5 +1,5 @@
 {
-  "name": "openreceipt",
+  "name": "slipbyte",
   "version": "0.0.0-dev",
   "description": "TypeScript-first toolkit for building and printing thermal receipts.",
   "type": "module",
@@ -48,10 +48,10 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/boulahya01/OpenReceipt.git"
+    "url": "git+https://github.com/boulahya01/SlipByte.git"
   },
   "bugs": {
-    "url": "https://github.com/boulahya01/OpenReceipt/issues"
+    "url": "https://github.com/boulahya01/SlipByte/issues"
   },
-  "homepage": "https://github.com/boulahya01/OpenReceipt#readme"
+  "homepage": "https://github.com/boulahya01/SlipByte#readme"
 }

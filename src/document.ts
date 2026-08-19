@@ -1,4 +1,4 @@
-import { OpenReceiptError } from "./errors.js";
+import { SlipByteError } from "./errors.js";
 import type { Alignment, ReceiptDocument } from "./types.js";
 
 export const PRINT_DOCUMENT_VERSION = 1 as const;
@@ -55,7 +55,7 @@ export function parsePrintDocument(value: unknown): PrintDocumentV1 {
   }
 
   if (value.version !== PRINT_DOCUMENT_VERSION) {
-    throw new OpenReceiptError(
+    throw new SlipByteError(
       "UNSUPPORTED_DOCUMENT_VERSION",
       "Print document version is not supported.",
       { version: value.version },
@@ -171,8 +171,8 @@ function requireNonNegativeNumber(value: unknown, index: number, field: string):
   throw invalidDocument("Print document numeric field must be finite and non-negative.", { index, field });
 }
 
-function invalidDocument(message: string, details: Record<string, unknown> = {}): OpenReceiptError {
-  return new OpenReceiptError("INVALID_PRINT_DOCUMENT", message, details);
+function invalidDocument(message: string, details: Record<string, unknown> = {}): SlipByteError {
+  return new SlipByteError("INVALID_PRINT_DOCUMENT", message, details);
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

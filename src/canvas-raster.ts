@@ -1,4 +1,4 @@
-import { OpenReceiptError } from "./errors.js";
+import { SlipByteError } from "./errors.js";
 import { defineRasterImage, type RasterImage, type RasterTextRenderer } from "./raster.js";
 
 export type CanvasTextDirection = "ltr" | "rtl" | "inherit";
@@ -45,7 +45,7 @@ export function createCanvasRasterTextRenderer(
   options: CanvasRasterTextOptions,
 ): RasterTextRenderer {
   if (typeof createSurface !== "function") {
-    throw new OpenReceiptError(
+    throw new SlipByteError(
       "INVALID_RASTER_RENDERER",
       "Canvas raster renderer requires a surface factory function.",
       { receivedType: typeof createSurface },
@@ -112,7 +112,7 @@ export function createCanvasRasterTextRenderer(
 
 function resolveOptions(options: CanvasRasterTextOptions): Required<CanvasRasterTextOptions> {
   if (typeof options !== "object" || options === null || Array.isArray(options)) {
-    throw new OpenReceiptError(
+    throw new SlipByteError(
       "INVALID_RASTER_RENDERER",
       "Canvas raster renderer options must be an object.",
       { receivedType: Array.isArray(options) ? "array" : typeof options },
@@ -125,7 +125,7 @@ function resolveOptions(options: CanvasRasterTextOptions): Required<CanvasRaster
   const height = requirePositiveInteger(options.height, "height");
   const expectedRgbaLength = width * height * 4;
   if (!Number.isSafeInteger(expectedRgbaLength)) {
-    throw new OpenReceiptError(
+    throw new SlipByteError(
       "INVALID_RASTER_RENDERER",
       "Canvas raster renderer dimensions are too large.",
       { width, height },
@@ -136,7 +136,7 @@ function resolveOptions(options: CanvasRasterTextOptions): Required<CanvasRaster
   const y = options.y === undefined ? 0 : requireFiniteNumber(options.y, "y");
   const direction = options.direction ?? "inherit";
   if (direction !== "ltr" && direction !== "rtl" && direction !== "inherit") {
-    throw new OpenReceiptError(
+    throw new SlipByteError(
       "INVALID_RASTER_RENDERER",
       "Canvas text direction must be ltr, rtl, or inherit.",
     );
@@ -165,7 +165,7 @@ function rgbaToRaster(
   }
 
   if (imageData.width !== expectedWidth || imageData.height !== expectedHeight) {
-    throw new OpenReceiptError(
+    throw new SlipByteError(
       "RASTER_RENDER_FAILED",
       "Canvas returned image data with unexpected dimensions.",
       {
@@ -184,7 +184,7 @@ function rgbaToRaster(
   }
 
   if (!imageData.data || imageData.data.length !== expectedRgbaLength) {
-    throw new OpenReceiptError(
+    throw new SlipByteError(
       "RASTER_RENDER_FAILED",
       "Canvas returned invalid RGBA pixel data.",
       { rendererId, expectedLength: expectedRgbaLength },
@@ -220,7 +220,7 @@ function rgbaToRaster(
 
 function requireSafeText(value: unknown, field: string): string {
   if (typeof value !== "string" || !value.trim() || /[\u0000-\u001F\u007F]/u.test(value)) {
-    throw new OpenReceiptError(
+    throw new SlipByteError(
       "INVALID_RASTER_RENDERER",
       `Canvas raster renderer ${field} must be safe non-empty text.`,
       { field, receivedType: typeof value },
@@ -231,7 +231,7 @@ function requireSafeText(value: unknown, field: string): string {
 
 function requirePositiveInteger(value: unknown, field: string): number {
   if (typeof value !== "number" || !Number.isSafeInteger(value) || value < 1) {
-    throw new OpenReceiptError(
+    throw new SlipByteError(
       "INVALID_RASTER_RENDERER",
       `Canvas raster renderer ${field} must be a positive safe integer.`,
       { field, receivedType: typeof value },
@@ -242,7 +242,7 @@ function requirePositiveInteger(value: unknown, field: string): number {
 
 function requireFiniteNumber(value: unknown, field: string): number {
   if (typeof value !== "number" || !Number.isFinite(value)) {
-    throw new OpenReceiptError(
+    throw new SlipByteError(
       "INVALID_RASTER_RENDERER",
       `Canvas raster renderer ${field} must be finite.`,
       { field, receivedType: typeof value },
@@ -253,7 +253,7 @@ function requireFiniteNumber(value: unknown, field: string): number {
 
 function requireByte(value: unknown, field: string): number {
   if (typeof value !== "number" || !Number.isInteger(value) || value < 0 || value > 255) {
-    throw new OpenReceiptError(
+    throw new SlipByteError(
       "INVALID_RASTER_RENDERER",
       `Canvas raster renderer ${field} must be an integer from 0 through 255.`,
       { field, receivedType: typeof value },
@@ -266,6 +266,6 @@ function isByte(value: number): boolean {
   return Number.isInteger(value) && value >= 0 && value <= 255;
 }
 
-function renderFailure(message: string, rendererId: string): OpenReceiptError {
-  return new OpenReceiptError("RASTER_RENDER_FAILED", message, { rendererId });
+function renderFailure(message: string, rendererId: string): SlipByteError {
+  return new SlipByteError("RASTER_RENDER_FAILED", message, { rendererId });
 }

@@ -1,10 +1,10 @@
-# Contributing to OpenReceipt
+# Contributing to SlipByte
 
 Thanks for helping make thermal printing easier for developers.
 
 ## Before contributing
 
-OpenReceipt is intentionally focused. A contribution should remove real developer friction without making the common path harder to understand.
+SlipByte is intentionally focused. A contribution should remove real developer friction without making the common path harder to understand.
 
 Before implementing a large feature, open an issue describing:
 
@@ -18,13 +18,13 @@ Before implementing a large feature, open an issue describing:
 
 Requirements:
 
-- Node.js 20 or newer
+- Node.js 22.x or 24.x
 - npm
 
-Install dependencies:
+Install the committed dependency tree:
 
 ```bash
-npm install
+npm ci
 ```
 
 Run all checks:
@@ -47,7 +47,7 @@ npm run typecheck
 
 ## Design rules
 
-OpenReceipt separates receipt intent from printer implementation.
+SlipByte separates receipt intent from printer implementation.
 
 Do not introduce printer commands or transport details into the receipt document layer.
 
@@ -75,7 +75,7 @@ Breaking API changes require a clear justification while the project is pre-1.0.
 
 ## Errors
 
-Use structured `OpenReceiptError` codes for expected library failures. Error messages should explain what happened and, when possible, what the developer can do next.
+Use structured `SlipByteError` codes for expected library failures. Error messages should explain what happened and, when possible, what the developer can do next.
 
 ## Tests
 

@@ -1,11 +1,11 @@
-export { OpenReceiptError } from "./errors.js";
-export type { OpenReceiptErrorCode } from "./errors.js";
+export { SlipByteError } from "./errors.js";
+export type { SlipByteErrorCode } from "./errors.js";
 export { diagnoseError } from "./diagnostics.js";
 export type {
   DeliveryState,
   DiagnosticStage,
-  OpenReceiptDiagnostic,
   RetrySafety,
+  SlipByteDiagnostic,
 } from "./diagnostics.js";
 export {
   defineDeviceProfile,

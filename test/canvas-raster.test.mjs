@@ -3,7 +3,7 @@ import test from "node:test";
 
 import {
   createCanvasRasterTextRenderer,
-  OpenReceiptError,
+  SlipByteError,
   renderTextToRaster,
 } from "../dist/index.js";
 
@@ -112,7 +112,7 @@ test("rejects malformed renderer configuration before drawing", () => {
       },
       { font: "16px Fixture", width: 0, height: 1 },
     ),
-    (error) => error instanceof OpenReceiptError && error.code === "INVALID_RASTER_RENDERER",
+    (error) => error instanceof SlipByteError && error.code === "INVALID_RASTER_RENDERER",
   );
   assert.equal(created, false);
 });
@@ -130,7 +130,7 @@ test("wraps Canvas context acquisition failures at the Canvas adapter boundary",
   assert.throws(
     () => renderer.render("private receipt مرحبا"),
     (error) =>
-      error instanceof OpenReceiptError &&
+      error instanceof SlipByteError &&
       error.code === "RASTER_RENDER_FAILED" &&
       error.message.includes("context acquisition") &&
       JSON.stringify(error.details).includes("private") === false,
@@ -146,7 +146,7 @@ test("rejects Canvas image data dimensions that differ from configured surface",
   assert.throws(
     () => renderer.render("fixture"),
     (error) =>
-      error instanceof OpenReceiptError &&
+      error instanceof SlipByteError &&
       error.code === "RASTER_RENDER_FAILED" &&
       error.details.expectedWidth === 8 &&
       error.details.receivedWidth === 4,
@@ -177,7 +177,7 @@ test("does not copy receipt text into Canvas failure diagnostics", () => {
   assert.throws(
     () => renderTextToRaster("private receipt مرحبا", renderer),
     (error) =>
-      error instanceof OpenReceiptError &&
+      error instanceof SlipByteError &&
       error.code === "RASTER_RENDER_FAILED" &&
       JSON.stringify(error.details).includes("private receipt") === false,
   );

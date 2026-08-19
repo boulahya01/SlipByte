@@ -1,12 +1,12 @@
 # TCP transport
 
-OpenReceipt's TCP transport sends already-encoded printer bytes over a raw TCP socket. It does not know about receipt intent, layout, ESC/POS commands, printer brands, or device code pages.
+SlipByte's TCP transport sends already-encoded printer bytes over a raw TCP socket. It does not know about receipt intent, layout, ESC/POS commands, printer brands, or device code pages.
 
 ## API
 
 `sendTcp(data, { host, port, connectTimeoutMs, writeTimeoutMs, closeTimeoutMs }, connector?)` accepts a `Uint8Array` payload and an explicit endpoint.
 
-The port is required. OpenReceipt does not hard-code a printer port because common ESC/POS network conventions are not universal protocol truth.
+The port is required. SlipByte does not hard-code a printer port because common ESC/POS network conventions are not universal protocol truth.
 
 Defaults:
 
@@ -50,7 +50,7 @@ Timeouts can abort the built-in socket. Injected connections may optionally expo
 
 A successful TCP write means the transport handed the bytes through the socket lifecycle without a detected transport failure. It does **not** prove that paper physically exited the printer.
 
-OpenReceipt deliberately performs no automatic retry. A connection can fail after some or all bytes reached the device, so blind retry can create duplicate physical receipts. Retry policy belongs above the transport layer where the application can represent an uncertain print outcome explicitly.
+SlipByte deliberately performs no automatic retry. A connection can fail after some or all bytes reached the device, so blind retry can create duplicate physical receipts. Retry policy belongs above the transport layer where the application can represent an uncertain print outcome explicitly.
 
 ## Testing and alternate runtimes
 

@@ -1,11 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { OpenReceiptError, receipt } from "../dist/index.js";
+import { SlipByteError, receipt } from "../dist/index.js";
 
 test("builds a deterministic receipt document", () => {
   const document = receipt()
-    .title("OpenReceipt Cafe")
+    .title("SlipByte Cafe")
     .item("Coffee", 2, 30)
     .divider()
     .total("TOTAL", 60)
@@ -17,7 +17,7 @@ test("builds a deterministic receipt document", () => {
     nodes: [
       {
         type: "text",
-        value: "OpenReceipt Cafe",
+        value: "SlipByte Cafe",
         align: "center",
         bold: true,
       },
@@ -45,7 +45,7 @@ test("uses structured errors for invalid input", () => {
   assert.throws(
     () => receipt().item("Coffee", 0, 10),
     (error) =>
-      error instanceof OpenReceiptError &&
+      error instanceof SlipByteError &&
       error.code === "INVALID_QUANTITY" &&
       error.details.quantity === 0,
   );
@@ -55,7 +55,7 @@ test("rejects ESC/POS control bytes in normal receipt text", () => {
   assert.throws(
     () => receipt().text(`Coffee\u001b@`),
     (error) =>
-      error instanceof OpenReceiptError &&
+      error instanceof SlipByteError &&
       error.code === "INVALID_TEXT" &&
       error.details.codePoint === 27 &&
       !("value" in error.details),
@@ -66,7 +66,7 @@ test("rejects invalid plain JavaScript text values without leaking content", () 
   assert.throws(
     () => receipt().item(null, 1, 10),
     (error) =>
-      error instanceof OpenReceiptError &&
+      error instanceof SlipByteError &&
       error.code === "INVALID_TEXT" &&
       error.details.receivedType === "object" &&
       !("name" in error.details),

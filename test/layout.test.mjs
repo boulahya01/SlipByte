@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
-  OpenReceiptError,
+  SlipByteError,
   layoutReceipt,
   paperProfile,
   receipt,
@@ -106,7 +106,7 @@ test("throws a structured error when overflow policy is error", () => {
   assert.throws(
     () => layoutReceipt(document, { paper: "58mm", overflow: "error" }),
     (error) =>
-      error instanceof OpenReceiptError &&
+      error instanceof SlipByteError &&
       error.code === "LAYOUT_OVERFLOW" &&
       error.details.columns === 32 &&
       error.details.sourceNodeIndex === 0,
@@ -135,7 +135,7 @@ test("rejects unsafe custom paper profiles", () => {
         paper: { id: "broken", widthMm: 58, columns: 0 },
       }),
     (error) =>
-      error instanceof OpenReceiptError &&
+      error instanceof SlipByteError &&
       error.code === "INVALID_PAPER_PROFILE",
   );
 });
@@ -144,7 +144,7 @@ test("rejects unknown built-in paper names from plain JavaScript", () => {
   assert.throws(
     () => paperProfile("72mm"),
     (error) =>
-      error instanceof OpenReceiptError &&
+      error instanceof SlipByteError &&
       error.code === "INVALID_PAPER_PROFILE",
   );
 });
@@ -155,7 +155,7 @@ test("rejects invalid overflow values instead of guessing", () => {
   assert.throws(
     () => layoutReceipt(document, { overflow: "clip-somehow" }),
     (error) =>
-      error instanceof OpenReceiptError &&
+      error instanceof SlipByteError &&
       error.code === "INVALID_LAYOUT_OPTION",
   );
 });
@@ -166,7 +166,7 @@ test("rejects amount formatters that return invalid output", () => {
   assert.throws(
     () => layoutReceipt(document, { formatAmount: () => undefined }),
     (error) =>
-      error instanceof OpenReceiptError &&
+      error instanceof SlipByteError &&
       error.code === "AMOUNT_FORMAT_FAILED",
   );
 });
@@ -222,7 +222,7 @@ test("rejects broken text measurement strategies with structured errors", () => 
         },
       }),
     (error) =>
-      error instanceof OpenReceiptError &&
+      error instanceof SlipByteError &&
       error.code === "TEXT_MEASURE_FAILED",
   );
 });

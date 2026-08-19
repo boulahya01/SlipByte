@@ -1,6 +1,6 @@
 import {
-  OpenReceiptError,
-  type OpenReceiptErrorCode,
+  SlipByteError,
+  type SlipByteErrorCode,
 } from "./errors.js";
 
 export type DiagnosticStage =
@@ -24,8 +24,8 @@ export type DeliveryState =
   | "uncertain"
   | "unknown";
 
-export type OpenReceiptDiagnostic = Readonly<{
-  code?: OpenReceiptErrorCode;
+export type SlipByteDiagnostic = Readonly<{
+  code?: SlipByteErrorCode;
   stage: DiagnosticStage;
   summary: string;
   retrySafety: RetrySafety;
@@ -33,12 +33,12 @@ export type OpenReceiptDiagnostic = Readonly<{
   remediation: readonly string[];
 }>;
 
-export function diagnoseError(error: unknown): OpenReceiptDiagnostic {
-  if (!(error instanceof OpenReceiptError)) {
+export function diagnoseError(error: unknown): SlipByteDiagnostic {
+  if (!(error instanceof SlipByteError)) {
     return diagnostic(
       undefined,
       "unknown",
-      "The failure is not an OpenReceipt structured error.",
+      "The failure is not a SlipByte structured error.",
       "unknown",
       "unknown",
       ["Inspect the original failure at the application boundary before retrying."],
@@ -182,13 +182,13 @@ export function diagnoseError(error: unknown): OpenReceiptDiagnostic {
 }
 
 function diagnostic(
-  code: OpenReceiptErrorCode | undefined,
+  code: SlipByteErrorCode | undefined,
   stage: DiagnosticStage,
   summary: string,
   retrySafety: RetrySafety,
   delivery: DeliveryState,
   remediation: readonly string[],
-): OpenReceiptDiagnostic {
+): SlipByteDiagnostic {
   return Object.freeze({
     ...(code ? { code } : {}),
     stage,

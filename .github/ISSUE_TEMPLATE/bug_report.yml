@@ -1,16 +1,16 @@
 name: Bug report
-description: Report a reproducible OpenReceipt problem
+description: Report a reproducible SlipByte problem
 title: "[Bug]: "
 labels: []
 body:
   - type: markdown
     attributes:
       value: |
-        Thanks for helping improve OpenReceipt. Do not include credentials, private customer receipts, tokens, or security exploit details here. Use the security reporting process for vulnerabilities.
+        Thanks for helping improve SlipByte. Do not include credentials, private customer receipts, tokens, or security exploit details here. Use the security reporting process for vulnerabilities.
   - type: input
     id: version
     attributes:
-      label: OpenReceipt version or commit
+      label: SlipByte version or commit
       placeholder: 0.x.x or commit SHA
     validations:
       required: true
@@ -19,7 +19,7 @@ body:
     attributes:
       label: Runtime
       description: Node.js version and operating system
-      placeholder: Node 20.x, Windows 11
+      placeholder: Node 22.x or 24.x, Windows 11
     validations:
       required: true
   - type: input
@@ -58,7 +58,7 @@ body:
     id: actual
     attributes:
       label: Actual behavior
-      description: Include structured OpenReceipt error codes and sanitized diagnostics when available
+      description: Include structured SlipByte error codes and sanitized diagnostics when available
     validations:
       required: true
   - type: checkboxes

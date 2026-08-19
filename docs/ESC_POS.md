@@ -1,6 +1,6 @@
 # ESC/POS encoder
 
-OpenReceipt keeps ESC/POS as a protocol adapter after layout and capability resolution. The encoder consumes a `LayoutDocument` plus a `DeviceProfile` and emits deterministic `Uint8Array` bytes. It does not open sockets, USB devices, operating-system printer queues, or perform transport retries.
+SlipByte keeps ESC/POS as a protocol adapter after layout and capability resolution. The encoder consumes a `LayoutDocument` plus a `DeviceProfile` and emits deterministic `Uint8Array` bytes. It does not open sockets, USB devices, operating-system printer queues, or perform transport retries.
 
 ## Current v0.1 scope
 

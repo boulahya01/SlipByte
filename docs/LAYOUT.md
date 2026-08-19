@@ -1,6 +1,6 @@
 # Layout Engine
 
-The OpenReceipt layout engine converts a hardware-independent `ReceiptDocument` into a deterministic `LayoutDocument`.
+The SlipByte layout engine converts a hardware-independent `ReceiptDocument` into a deterministic `LayoutDocument`.
 
 It does **not** generate ESC/POS commands, open network connections, access USB devices, or make printer-brand decisions.
 
@@ -16,7 +16,7 @@ future encoder / preview
 
 ## Built-in paper profiles
 
-OpenReceipt currently exposes two convenience profiles:
+SlipByte currently exposes two convenience profiles:
 
 | Profile | Physical width | Default columns |
 | --- | ---: | ---: |
@@ -37,7 +37,7 @@ layoutReceipt(document, {
 });
 ```
 
-Printer-specific evidence belongs in future printer profiles / compatibility data rather than application-level brand checks.
+Printer-specific evidence belongs in printer profiles / compatibility data rather than application-level brand checks.
 
 ## Overflow behavior
 
@@ -66,7 +66,7 @@ layoutReceipt(document, {
 
 ### `error`
 
-OpenReceipt throws `OpenReceiptError` with code `LAYOUT_OVERFLOW` rather than changing the content silently.
+SlipByte throws `SlipByteError` with code `LAYOUT_OVERFLOW` rather than changing the content silently.
 
 ```ts
 layoutReceipt(document, {
@@ -78,7 +78,7 @@ The error includes the available columns, measured content width, source receipt
 
 ## Text measurement
 
-OpenReceipt does not assume one human language or one printer font model.
+SlipByte does not assume one human language or one printer font model.
 
 The default `GRAPHEME_TEXT_MEASURER` counts Unicode grapheme clusters. This means combined characters such as accented graphemes and multi-code-point emoji are kept intact when wrapping/truncating.
 
@@ -106,7 +106,7 @@ A column-based measurer must:
 - expose `measure(text)`;
 - return a finite non-negative integer cell count;
 - report a normal ASCII space as exactly one cell;
-- throw or return invalid data only when it wants OpenReceipt to fail with a structured diagnostic.
+- throw or return invalid data only when it wants SlipByte to fail with a structured diagnostic.
 
 This extension point can model, for example:
 

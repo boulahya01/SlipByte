@@ -1,17 +1,17 @@
 # Public Development and Release Checklist
 
-OpenReceipt distinguishes two separate events:
+SlipByte distinguishes two separate events:
 
 1. **Public development** — the GitHub repository becomes public while the project is still explicitly early-stage.
 2. **Public package release** — a versioned npm package is published after the v0.1 release gates pass.
 
-Making the repository public does not mean OpenReceipt is production-ready or broadly hardware-compatible.
+Making the repository public does not mean SlipByte is production-ready or broadly hardware-compatible.
 
 ## A. Public development gate
 
 Before changing repository visibility to public:
 
-- [x] README clearly identifies OpenReceipt as early development
+- [x] README clearly identifies SlipByte as early development
 - [x] implemented, active, and planned work are separated
 - [x] target API examples are labeled unreleased where appropriate
 - [x] LICENSE, SECURITY.md, SUPPORT.md, CONTRIBUTING.md, and CODE_OF_CONDUCT.md are present
@@ -19,9 +19,9 @@ Before changing repository visibility to public:
 - [x] `.gitignore` covers environment files, keys/certificates, logs, captures, generated output, and editor files
 - [x] package version remains `0.0.0-dev`
 - [x] compatibility policy rejects broad claims without evidence
-- [x] current CI limitation is documented rather than represented as passing
+- [x] CI status is documented truthfully
 - [ ] repository visibility intentionally changed to public by the owner
-- [ ] repository description and topics are set
+- [ ] repository description and topics are set for the SlipByte identity
 - [ ] default-branch/ruleset configuration reviewed after public visibility is enabled
 
 ### Public-history review
@@ -41,16 +41,16 @@ The following are **not required merely to develop in public**, but they are req
 
 ### Source and package quality
 
-- [ ] `npm run check` passes from a clean checkout
+- [ ] `npm run check` passes from a clean checkout of the exact release head
 - [x] package lockfile is committed for reproducible contributor/CI installs
 - [ ] `npm run release:check` passes on the exact release head
-- [ ] package name and npm ownership are confirmed
+- [ ] exact npm ownership/availability for `slipbyte` is confirmed
 - [ ] package version is changed from `0.0.0-dev` to the intended semver release
 - [x] package artifact policy is encoded: only `dist`, package metadata, README, and LICENSE may ship
 - [x] `prepublishOnly` runs the complete release check and blocks normal publishing when validation or package verification fails
-- [ ] npm provenance / trusted publishing is configured when the release workflow is introduced
+- [ ] npm provenance / trusted publishing is configured for the first release workflow
 
-`npm run release:check` performs the full TypeScript/test gate and then runs `npm pack --dry-run --json --ignore-scripts` through `scripts/verify-package.mjs`. The verifier requires `dist/index.js`, `dist/index.d.ts`, package metadata, README, and LICENSE and rejects repository-only files such as `src`, `test`, `scripts`, `docs`, and `.github` from the npm artifact.
+`npm run release:check` performs the full TypeScript/test gate and then runs `npm pack --dry-run --json --ignore-scripts` through `scripts/verify-package.mjs`. The verifier requires `dist/index.js`, `dist/index.d.ts`, package metadata, README, and LICENSE and rejects repository-only files such as `src`, `test`, `scripts`, `docs`, and `.github` from the npm artifact. It also installs the packed tarball into an isolated consumer, imports the package by its declared package name, runs the hardware-free receipt/preview path, and compiles a TypeScript consumer against the packed declarations.
 
 ### Core v0.1 pipeline
 
@@ -68,7 +68,9 @@ The following are **not required merely to develop in public**, but they are req
 - [x] profile-scoped ESC/POS text configuration
 - [x] canonical raster image and explicit ESC/POS raster strategy boundary
 - [x] Canvas2D Unicode-to-raster adapter
-- [ ] real runtime/font Unicode conformance evidence for representative Arabic/RTL, CJK, combining-mark, emoji, and mixed-script fixtures
+- [x] real runtime/font Unicode conformance evidence for representative Arabic/RTL, CJK, combining-mark, emoji, and mixed-script fixtures
+
+The Unicode conformance evidence is software-rendering evidence only. It does not establish universal glyph correctness or physical-printer compatibility.
 
 ### Compatibility and safety
 
@@ -80,41 +82,55 @@ The following are **not required merely to develop in public**, but they are req
 - [x] external/runtime metadata is validated before use in structured contracts
 - [x] diagnostics avoid leaking receipt contents or arbitrary low-level payloads by default
 - [ ] every named physical-printer compatibility claim in the release has exact evidence
-- [ ] end-to-end physical-printer evidence is recorded for the release target
+- [ ] end-to-end physical-printer evidence is recorded for any release-target compatibility claim
 
 ### Developer experience
 
 - [x] hardware-free preview/mock path works through the real layout path
 - [x] common transport/encoding failures expose structured diagnostic guidance
 - [x] public lower-level API names and boundaries are documented
-- [ ] first released copy/paste example is validated from an installed package
-- [ ] TypeScript declarations are confirmed in the packed npm artifact by `npm run release:check`
-- [ ] supported Node.js versions are exercised on the release head
+- [ ] first released copy/paste example is validated from the renamed packed package
+- [ ] TypeScript declarations are confirmed in the renamed packed npm artifact by `npm run release:check`
+- [ ] supported Node.js versions are exercised on the renamed release head
 
 ### AI-agent usability
 
 - [x] AGENTS.md describes the current architecture and maintenance constraints
 - [x] public contracts document capability/fallback boundaries instead of relying on printer-brand inference
 - [x] examples clearly distinguish implemented API from unreleased target API
-- [x] structured OpenReceipt errors are available for tools to classify failures
+- [x] structured SlipByte errors are available for tools to classify failures
 - [x] unsupported behavior is explicit instead of requiring brand/model inference
 
 ### CI / release infrastructure
 
-GitHub Actions currently has a startup/infrastructure blocker tracked in issue #8. A run that never starts is not a passing check.
+GitHub Actions is functioning after the account billing/startup blocker in issue #8 was resolved. The active CI workflow runs Node.js 22 and 24, `npm ci`, and the full `npm run release:check` gate.
 
 Before npm v0.1:
 
-- [ ] normal CI jobs start successfully
+- [x] normal CI jobs start successfully
 - [ ] required checks are green on the exact release head
 - [ ] branch/ruleset settings match the intended merge policy
 - [ ] release workflow cannot bypass validation
+
+## Identity gate
+
+The owner selected **SlipByte** to replace the colliding OpenReceipt identity before the first public/npm release.
+
+Before closing the identity blocker:
+
+- [ ] current package/root API/docs use SlipByte consistently
+- [ ] npm ownership/availability for `slipbyte` is confirmed directly against the registry
+- [ ] GitHub repository is renamed to SlipByte
+- [ ] repository description/topics use the selected identity
+- [ ] release docs contain no implication of affiliation with the unrelated pre-existing OpenReceipt ecosystem
+
+Historical issues and commits may retain the former name when it is part of the factual engineering history; current public product documentation should not.
 
 ## Release decision
 
 Only publish the first npm version when the project can answer these questions accurately:
 
-1. What does OpenReceipt support today?
+1. What does SlipByte support today?
 2. What does it not support yet?
 3. Which physical-device claims are actually verified?
 4. How can a developer test behavior without risking production hardware or data?

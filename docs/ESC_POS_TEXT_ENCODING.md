@@ -1,6 +1,6 @@
 # ESC/POS text encoding configuration
 
-OpenReceipt keeps Unicode text representation separate from ESC/POS code-page selection. A generic `encodingId` selected earlier in the pipeline does not imply a universal ESC/POS numeric code-page value.
+SlipByte keeps Unicode text representation separate from ESC/POS code-page selection. A generic `encodingId` selected earlier in the pipeline does not imply a universal ESC/POS numeric code-page value.
 
 ## Profile-scoped configuration
 
@@ -33,7 +33,7 @@ When text is actually present, `encodeEscPos()` emits `ESC t n` once before the 
 
 ## Why the numeric value is not global
 
-The numeric `codePage` belongs to the reviewed device/profile configuration. OpenReceipt does not export a global `encodingId -> codePage` registry because ESC/POS code-page tables can vary by device implementation.
+The numeric `codePage` belongs to the reviewed device/profile configuration. SlipByte does not export a global `encodingId -> codePage` registry because ESC/POS code-page tables can vary by device implementation.
 
 The generic path stays:
 

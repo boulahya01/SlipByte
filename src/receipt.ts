@@ -1,4 +1,4 @@
-import { OpenReceiptError } from "./errors.js";
+import { SlipByteError } from "./errors.js";
 import type {
   Alignment,
   ReceiptDocument,
@@ -34,7 +34,7 @@ export class ReceiptBuilder {
     assertSafeText(name, "item name");
 
     if (!Number.isFinite(quantity) || quantity <= 0) {
-      throw new OpenReceiptError(
+      throw new SlipByteError(
         "INVALID_QUANTITY",
         "Receipt item quantity must be a finite number greater than zero.",
         { quantity },
@@ -42,7 +42,7 @@ export class ReceiptBuilder {
     }
 
     if (!Number.isFinite(unitPrice) || unitPrice < 0) {
-      throw new OpenReceiptError(
+      throw new SlipByteError(
         "INVALID_AMOUNT",
         "Receipt item unit price must be a finite number greater than or equal to zero.",
         { unitPrice },
@@ -57,7 +57,7 @@ export class ReceiptBuilder {
     assertSafeText(label, "total label");
 
     if (!Number.isFinite(amount) || amount < 0) {
-      throw new OpenReceiptError(
+      throw new SlipByteError(
         "INVALID_AMOUNT",
         "Receipt total amount must be a finite number greater than or equal to zero.",
         { amount },
@@ -75,7 +75,7 @@ export class ReceiptBuilder {
 
   feed(lines = 1): this {
     if (!Number.isInteger(lines) || lines < 1) {
-      throw new OpenReceiptError(
+      throw new SlipByteError(
         "INVALID_FEED_LINES",
         "Feed lines must be a positive integer.",
         { lines },
@@ -104,7 +104,7 @@ export function receipt(): ReceiptBuilder {
 
 function assertSafeText(value: string, field: string): void {
   if (typeof value !== "string" || !value.trim()) {
-    throw new OpenReceiptError(
+    throw new SlipByteError(
       "INVALID_TEXT",
       `Receipt ${field} must be non-empty text.`,
       { field, receivedType: typeof value },
@@ -113,7 +113,7 @@ function assertSafeText(value: string, field: string): void {
 
   const match = value.match(UNSAFE_CONTROL_CHARACTER);
   if (match) {
-    throw new OpenReceiptError(
+    throw new SlipByteError(
       "INVALID_TEXT",
       `Receipt ${field} contains a control character that is not allowed in normal text.`,
       {
