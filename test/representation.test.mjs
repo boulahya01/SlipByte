@@ -3,7 +3,7 @@ import test from "node:test";
 
 import {
   diagnoseError,
-  OpenReceiptError,
+  SlipByteError,
   selectTextRepresentation,
 } from "../dist/index.js";
 
@@ -70,7 +70,7 @@ test("rejects duplicate normalized native candidate ids", () => {
         ],
       }),
     (error) =>
-      error instanceof OpenReceiptError &&
+      error instanceof SlipByteError &&
       error.code === "INVALID_TEXT_REPRESENTATION_OPTION" &&
       error.details.candidateIndex === 1,
   );
@@ -128,7 +128,7 @@ test("rejects malformed profile encoding allowlists before probing candidates", 
           },
         ),
       (error) =>
-        error instanceof OpenReceiptError &&
+        error instanceof SlipByteError &&
         error.code === "INVALID_DEVICE_PROFILE" &&
         !Object.values(error.details).includes("secret receipt text"),
     );
@@ -163,7 +163,7 @@ test("rejects unsafe device profile note metadata before probing candidates", ()
           },
         ),
       (error) =>
-        error instanceof OpenReceiptError &&
+        error instanceof SlipByteError &&
         error.code === "INVALID_DEVICE_PROFILE" &&
         error.details.noteIndex === 0 &&
         !Object.values(error.details).includes("secret receipt text") &&
@@ -200,7 +200,7 @@ test("rejects malformed device profile shapes with structured errors before prob
           ],
         }),
       (error) =>
-        error instanceof OpenReceiptError &&
+        error instanceof SlipByteError &&
         error.code === "INVALID_DEVICE_PROFILE" &&
         !Object.values(error.details).includes("secret receipt text"),
     );
@@ -233,7 +233,7 @@ test("does not echo arbitrary invalid capability payloads in device profile diag
         },
       ),
     (error) =>
-      error instanceof OpenReceiptError &&
+      error instanceof SlipByteError &&
       error.code === "INVALID_DEVICE_PROFILE" &&
       error.details.capability === "text" &&
       error.details.receivedType === "object" &&
@@ -308,7 +308,7 @@ test("requires raster fallback to be explicitly enabled and supported", () => {
           options,
         ),
       (error) =>
-        error instanceof OpenReceiptError &&
+        error instanceof SlipByteError &&
         error.code === "UNSUPPORTED_TEXT_REPRESENTATION" &&
         !("text" in error.details),
     );
@@ -338,7 +338,7 @@ test("rejects malformed candidates and probe failures without leaking text", () 
         nativeCandidates: [{ id: "bad\nidentifier", canRepresent: () => true }],
       }),
     (error) =>
-      error instanceof OpenReceiptError &&
+      error instanceof SlipByteError &&
       error.code === "INVALID_TEXT_REPRESENTATION_OPTION" &&
       !Object.values(error.details).includes("secret receipt text"),
   );
@@ -360,7 +360,7 @@ test("rejects malformed candidates and probe failures without leaking text", () 
         },
       ),
     (error) =>
-      error instanceof OpenReceiptError &&
+      error instanceof SlipByteError &&
       error.code === "TEXT_REPRESENTATION_FAILED" &&
       !("cause" in error.details) &&
       !Object.values(error.details).includes("secret receipt text"),
@@ -369,7 +369,7 @@ test("rejects malformed candidates and probe failures without leaking text", () 
 
 test("diagnoses representation failures before transport", () => {
   const diagnostic = diagnoseError(
-    new OpenReceiptError(
+    new SlipByteError(
       "UNSUPPORTED_TEXT_REPRESENTATION",
       "fixture failure",
     ),
