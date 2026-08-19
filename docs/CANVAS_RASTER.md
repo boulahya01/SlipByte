@@ -1,12 +1,12 @@
 # Canvas2D Unicode raster rendering
 
-OpenReceipt can turn text into the canonical packed monochrome `RasterImage` format through a Canvas2D-compatible runtime.
+SlipByte can turn text into the canonical packed monochrome `RasterImage` format through a Canvas2D-compatible runtime.
 
 `createCanvasRasterTextRenderer()` owns only the deterministic thermal-printer conversion step:
 
 `Unicode text -> Canvas2D draw -> RGBA pixels -> 1-bit packed RasterImage`
 
-The configured Canvas implementation and font remain responsible for glyph coverage, shaping, bidi behavior, emoji/color-font support, and platform-specific text rasterization. OpenReceipt does not claim that every Canvas runtime or font can render every Unicode string correctly.
+The configured Canvas implementation and font remain responsible for glyph coverage, shaping, bidi behavior, emoji/color-font support, and platform-specific text rasterization. SlipByte does not claim that every Canvas runtime or font can render every Unicode string correctly.
 
 ## Why this boundary exists
 
@@ -20,7 +20,7 @@ This stays separate from the receipt/document API and from ESC/POS command selec
 import {
   createCanvasRasterTextRenderer,
   renderTextToRaster,
-} from "openreceipt";
+} from "slipbyte";
 
 const renderer = createCanvasRasterTextRenderer(
   (width, height) => canvasRuntime.createCanvas(width, height),
@@ -36,7 +36,7 @@ const renderer = createCanvasRasterTextRenderer(
 const image = renderTextToRaster("مرحبا بالعالم", renderer);
 ```
 
-`canvasRuntime` can be a browser/runtime adapter or a Node Canvas2D implementation. The factory is injected deliberately so the core package does not force one native graphics dependency on every OpenReceipt user.
+`canvasRuntime` can be a browser/runtime adapter or a Node Canvas2D implementation. The factory is injected deliberately so the core package does not force one native graphics dependency on every SlipByte user.
 
 ## Deterministic bitmap conversion
 
