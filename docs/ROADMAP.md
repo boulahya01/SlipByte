@@ -192,15 +192,27 @@ Completed:
 - package identity `slipbyte`
 - owner-confirmed and merged package version `0.1.0`
 - packed-package artifact/runtime/declaration verification
+- release-facing claim and copy/paste audit
+- stage-only GitHub Actions release workflow prepared with OIDC, exact tag/version checks, `main` ancestry enforcement, and a mandatory `release:check` before `npm stage publish`
+
+npm trusted-publisher configuration cannot be completed until `slipbyte` already exists in the registry. The recommended first-package bootstrap is therefore an explicit maintainer-run interactive `npm publish --access public` with 2FA after the exact `0.1.0` release candidate is proven. Automation does not perform that bootstrap publish or create a bypass-2FA npm token.
 
 Remaining before npm publication:
 
-- finish the release-facing claim/copy-paste audit
-- configure npm trusted publishing/provenance using current official guidance
-- ensure release publication cannot bypass `npm run release:check`
 - run final exact-release-candidate validation on Node.js 22 and 24
 - summarize unsupported/untested areas and residual release risks
-- obtain explicit owner authorization before npm publication, tag creation, or GitHub Release creation
+- obtain explicit owner acceptance of the first-package bootstrap limitation, including that a locally bootstrapped `0.1.0` will not have GitHub Actions provenance
+- obtain explicit owner authorization before the bootstrap npm publication
+
+Immediately after the package exists:
+
+- configure npm Trusted Publisher for `boulahya01/SlipByte` and workflow `publish.yml`
+- allow **`npm stage publish` only**
+- require 2FA and disallow traditional publish tokens in npm package settings
+- use the staged workflow plus maintainer 2FA approval for future releases
+- verify provenance on the first version released through trusted publishing
+
+See [`RELEASING.md`](RELEASING.md) for the detailed release procedure.
 
 Repository visibility is already public. npm publication remains an explicit maintainer action; automation does not perform it automatically.
 
