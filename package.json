@@ -1,6 +1,6 @@
 {
   "name": "slipbyte",
-  "version": "0.0.0-dev",
+  "version": "0.1.0",
   "description": "TypeScript-first toolkit for building and printing thermal receipts.",
   "type": "module",
   "license": "MIT",
