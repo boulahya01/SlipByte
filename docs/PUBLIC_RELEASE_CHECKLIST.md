@@ -20,9 +20,9 @@ Before changing repository visibility to public:
 - [x] package version remains `0.0.0-dev`
 - [x] compatibility policy rejects broad claims without evidence
 - [x] CI status is documented truthfully
-- [ ] repository visibility intentionally changed to public by the owner
-- [ ] repository description and topics are set for the SlipByte identity
-- [ ] default-branch/ruleset configuration reviewed after public visibility is enabled
+- [x] repository visibility is public and has been reviewed in the public-readiness audit
+- [x] repository description and topics are set for the SlipByte identity
+- [x] default-branch/ruleset configuration reviewed after public visibility is enabled
 
 ### Public-history review
 
@@ -32,6 +32,8 @@ Before or immediately after visibility changes, verify:
 - examples and fixtures use synthetic data;
 - open issues/PRs are useful and truthful as public engineering records;
 - no hardware test, benchmark, or compatibility result is claimed without evidence.
+
+The maintainer completed the all-history secret/local-path scan on 2026-08-19. No obvious credential or local-path marker was found. The only sensitive-looking historical filename was `.npmrc`; its current content is `engine-strict=true`, and a dedicated `.npmrc` history scan found no auth-token, username/password, or credential-bearing registry markers.
 
 If a problem is discovered after publication, fix the exposure correctly; do not rewrite history merely to make the repository look cleaner.
 
@@ -109,8 +111,10 @@ Before npm v0.1:
 
 - [x] normal CI jobs start successfully
 - [ ] required checks are green on the exact release head
-- [ ] branch/ruleset settings match the intended merge policy
+- [x] branch/ruleset settings match the intended merge policy
 - [ ] release workflow cannot bypass validation
+
+The active `Protect main` ruleset targets the default branch with no bypass actors. It requires pull requests, conversation resolution, strict up-to-date status checks for `check (22)` and `check (24)`, blocks force pushes and deletion, and permits squash merges only.
 
 ## Identity gate
 
@@ -121,7 +125,7 @@ Before closing the identity blocker:
 - [x] current package/root API/docs use SlipByte consistently
 - [x] npm ownership/availability for `slipbyte` is confirmed directly against the registry
 - [x] GitHub repository is renamed to SlipByte
-- [ ] repository description/topics use the selected identity
+- [x] repository description/topics use the selected identity
 - [x] release docs contain no implication of affiliation with the unrelated pre-existing OpenReceipt ecosystem
 
 Historical issues and commits may retain the former name when it is part of the factual engineering history; current public product documentation should not.
