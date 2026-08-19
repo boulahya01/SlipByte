@@ -10,11 +10,11 @@ It is designed for both developers and AI coding agents: strong types, determini
 
 SlipByte starts with thermal receipt printing because that is the concrete problem being solved first. The core is **not tied to one business domain, human language/script, printer brand, protocol, operating system, or transport**.
 
-Restaurants, retail, Arabic/RTL, CJK, emoji, Epson-compatible devices, TCP, and USB are use cases or conformance cases—not hard-coded product modes.
+Restaurants, retail, Arabic/RTL, CJK, emoji, specific printer brands/models, TCP, and USB are use cases or conformance cases—not hard-coded product modes.
 
 ## Status
 
-SlipByte is in early development and has not yet published its first npm release. The repository is intended to be developed in public so architecture decisions, real printing problems, tests, and compatibility evidence can remain inspectable.
+SlipByte is preparing its first npm release. The repository is public, the package metadata is versioned `0.1.0`, and the package has **not** been published to npm yet.
 
 ### Implemented on `main`
 
@@ -45,24 +45,21 @@ SlipByte is in early development and has not yet published its first npm release
 
 ### Active release work
 
-- complete the project/package identity migration to SlipByte
-- confirm exact npm registry ownership for `slipbyte`
-- record end-to-end physical-printer evidence for the release target without broadening compatibility claims beyond what was actually tested
-- complete the public-release audit
-- configure npm provenance/trusted publishing for the first release workflow
+- audit release-facing claims and keep software evidence separate from physical-printer evidence
+- validate the first install/import/copy-paste path from the packed `slipbyte` package
+- configure npm trusted publishing/provenance so release publication cannot bypass the full release gate
+- run final exact-release-candidate validation on Node.js 22 and 24
 
 ### Remaining v0.1 path
 
-- finish the SlipByte identity migration and exact registry ownership check
-- validate the end-to-end path on a physical thermal printer with exact model/environment evidence
-- complete the public-release audit
-- configure the release workflow so publication cannot bypass `release:check`
-- bump from `0.0.0-dev` to the intended v0.1 semver only on the exact release head
-- publish the first npm release only after explicit maintainer authorization
+- keep the first release free of named physical-printer compatibility claims unless exact device evidence is added
+- configure the release workflow and trusted publishing/provenance
+- run the exact release-candidate clean install, tests, build, package verification, and protected CI checks
+- publish `slipbyte@0.1.0` only after explicit maintainer authorization
 
 USB, serial, Bluetooth, operating-system printer queues, and broader hardware adapters remain post-v0.1 expansion areas unless evidence forces a reprioritization.
 
-The project does **not** currently claim broad physical-printer compatibility.
+The first npm release intentionally makes **no named physical-printer compatibility claim**. Software conformance and CI evidence must not be interpreted as proof that a specific physical printer will produce correct output.
 
 ## What SlipByte wants to fix
 
@@ -100,7 +97,7 @@ See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the layer boundaries.
 
 ## Try the implemented API
 
-The current package has a hardware-free path that exercises the real receipt and layout pipeline. The npm package has not been published yet, but this is the intended installed-package API:
+The current package has a hardware-free path that exercises the real receipt and layout pipeline. This exact installed-package flow is exercised from the packed `slipbyte` tarball by `npm run release:check`:
 
 ```ts
 import { mockPrint, receipt } from "slipbyte";
@@ -206,7 +203,7 @@ SlipByte treats repository history as part of the project:
 - PRs contain reviewable implementation and validation evidence;
 - discussions are used only for genuine proposals, compatibility investigations, or reusable technical explanations;
 - automated maintainers may work continuously and merge focused PRs only after the documented engineering gates pass;
-- public visibility and npm publication remain explicit owner decisions.
+- npm publication remains an explicit owner decision, and repository visibility/identity changes remain consequential owner actions.
 
 See [`docs/MAINTAINER_GUIDE.md`](docs/MAINTAINER_GUIDE.md) and [`docs/ROADMAP.md`](docs/ROADMAP.md).
 
