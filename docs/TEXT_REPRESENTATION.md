@@ -1,6 +1,6 @@
 # Text representation selection
 
-OpenReceipt keeps document and layout text Unicode-oriented. Choosing how that text becomes printer-native bytes or raster output happens later, at the representation/encoding boundary.
+SlipByte keeps document and layout text Unicode-oriented. Choosing how that text becomes printer-native bytes or raster output happens later, at the representation/encoding boundary.
 
 `selectTextRepresentation(text, profile, options)` makes that decision explicitly without inspecting printer brands, locales, or script names.
 
