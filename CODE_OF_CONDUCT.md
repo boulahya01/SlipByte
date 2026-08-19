@@ -1,6 +1,6 @@
 # Code of Conduct
 
-OpenReceipt should be a useful, technical, and welcoming open-source project.
+SlipByte should be a useful, technical, and welcoming open-source project.
 
 ## Expected behavior
 
@@ -28,5 +28,3 @@ The project does not accept:
 Maintainers may edit, hide, lock, or remove content and may restrict participation when necessary to protect contributors or the project.
 
 If a conduct issue involves a maintainer, use an appropriate private GitHub reporting mechanism where available rather than escalating sensitive details publicly.
-
-The goal of enforcement is to keep OpenReceipt safe, constructive, and useful for the people building and using it.
