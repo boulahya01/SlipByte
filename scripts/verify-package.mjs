@@ -3,6 +3,7 @@ import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
+const npmExecPath = process.env.npm_execpath;
 const npmCommand = process.platform === "win32" ? "npm.cmd" : "npm";
 const nodeCommand = process.execPath;
 const typescriptCli = join(process.cwd(), "node_modules", "typescript", "bin", "tsc");
@@ -17,7 +18,7 @@ try {
 }
 
 function verifyPackage() {
-  const dryRun = run(npmCommand, [
+  const dryRun = runNpm([
     "pack",
     "--dry-run",
     "--json",
@@ -28,7 +29,7 @@ function verifyPackage() {
 
   const tempRoot = mkdtempSync(join(tmpdir(), "slipbyte-package-"));
   try {
-    const packed = run(npmCommand, [
+    const packed = runNpm([
       "pack",
       "--json",
       "--ignore-scripts",
@@ -54,8 +55,7 @@ function verifyPackage() {
       JSON.stringify({ private: true, type: "module" }),
     );
 
-    run(
-      npmCommand,
+    runNpm(
       [
         "install",
         "--ignore-scripts",
@@ -129,11 +129,20 @@ function verifyPackage() {
   }
 }
 
-function run(command, args, cwd = process.cwd()) {
+function runNpm(args, cwd = process.cwd()) {
+  if (npmExecPath) {
+    return run(nodeCommand, [npmExecPath, ...args], cwd);
+  }
+
+  return run(npmCommand, args, cwd, { shell: process.platform === "win32" });
+}
+
+function run(command, args, cwd = process.cwd(), options = {}) {
   const result = spawnSync(command, args, {
     cwd,
     encoding: "utf8",
     stdio: ["ignore", "pipe", "pipe"],
+    ...options,
   });
 
   if (result.error) {
