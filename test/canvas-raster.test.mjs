@@ -15,6 +15,7 @@ function fakeSurface(imageData, onDraw = () => {}) {
         font: "",
         fillStyle: "",
         textBaseline: "",
+        textAlign: "start",
         direction: "inherit",
         fillRect() {},
         fillText(text, x, y) {
@@ -58,6 +59,7 @@ test("passes Unicode text and explicit RTL direction to the Canvas implementatio
           x,
           y,
           direction: context.direction,
+          align: context.textAlign,
           font: context.font,
           baseline: context.textBaseline,
         };
@@ -81,6 +83,7 @@ test("passes Unicode text and explicit RTL direction to the Canvas implementatio
     x: 2,
     y: 3,
     direction: "rtl",
+    align: "left",
     font: "18px Noto Sans Arabic",
     baseline: "top",
   });
