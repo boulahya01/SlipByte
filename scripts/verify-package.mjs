@@ -6,6 +6,7 @@ import { join } from "node:path";
 const npmCommand = process.platform === "win32" ? "npm.cmd" : "npm";
 const nodeCommand = process.execPath;
 const typescriptCli = join(process.cwd(), "node_modules", "typescript", "bin", "tsc");
+const EXPECTED_PACKAGE_NAME = "slipbyte";
 
 try {
   verifyPackage();
@@ -38,6 +39,10 @@ function verifyPackage() {
     verifyPackageShape(packedReport);
     const packageName = requirePackageName(packedReport);
 
+    if (packageName !== EXPECTED_PACKAGE_NAME) {
+      fail(`npm pack reported unexpected package name: ${packageName}`);
+    }
+
     if (typeof packedReport.filename !== "string" || !packedReport.filename.endsWith(".tgz")) {
       fail("npm pack did not report a valid tarball filename.");
     }
@@ -68,15 +73,18 @@ function verifyPackage() {
         "--eval",
         [
           `import * as slipbyte from ${JSON.stringify(packageName)};`,
-          'for (const name of ["receipt", "layoutReceipt", "createPrintDocument", "encodeEscPos", "sendTcp", "mockPrint", "diagnoseError"]) {',
+          'for (const name of ["receipt", "layoutReceipt", "createPrintDocument", "encodeEscPos", "sendTcp", "mockPrint", "diagnoseError", "SlipByteError"]) {',
           '  if (typeof slipbyte[name] !== "function") throw new Error(`Missing package export: ${name}`);',
           "}",
+          'if ("OpenReceiptError" in slipbyte) throw new Error("Former project error alias leaked through the package root.");',
           'const document = slipbyte.receipt().title("My Store").item("Coffee", 2, 30).total("TOTAL", 60).cut().toDocument();',
           'const result = slipbyte.mockPrint(document, { paper: "80mm" });',
           'for (const expected of ["My Store", "Coffee", "TOTAL", "60.00", "[cut]"]) {',
           '  if (!result.preview.includes(expected)) throw new Error(`Installed-package preview is missing: ${expected}`);',
           "}",
           'if (result.layout.paper.id !== "80mm") throw new Error("Installed-package smoke test used the wrong paper profile.");',
+          'const diagnostic = slipbyte.diagnoseError(new slipbyte.SlipByteError("INVALID_TEXT", "fixture"));',
+          'if (diagnostic.stage !== "input") throw new Error("SlipByteError package export is not wired to diagnostics.");',
         ].join("\n"),
       ],
       consumerDir,
@@ -85,12 +93,14 @@ function verifyPackage() {
     writeFileSync(
       join(consumerDir, "consumer-smoke.ts"),
       [
-        `import { mockPrint, receipt, type MockPrintResult, type ReceiptDocument } from ${JSON.stringify(packageName)};`,
+        `import { SlipByteError, mockPrint, receipt, type MockPrintResult, type ReceiptDocument, type SlipByteErrorCode } from ${JSON.stringify(packageName)};`,
         'const document: ReceiptDocument = receipt().title("Type check").total("TOTAL", 1).toDocument();',
         'const result: MockPrintResult = mockPrint(document, { paper: "58mm" });',
+        'const code: SlipByteErrorCode = "INVALID_TEXT";',
+        'const error = new SlipByteError(code, "fixture");',
         'const preview: string = result.preview;',
         'const paperId: string = result.layout.paper.id;',
-        'void [preview, paperId];',
+        'void [error, preview, paperId];',
       ].join("\n"),
     );
 
