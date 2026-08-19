@@ -2,7 +2,32 @@
 
 SlipByte's TCP transport sends already-encoded printer bytes over a raw TCP socket. It does not know about receipt intent, layout, ESC/POS commands, printer brands, or device code pages.
 
-## API
+## High-level ESC/POS print path
+
+`printEscPosTcp(document, options, connector?)` is the convenience path for the currently supported stack. It composes the existing layers in order:
+
+```text
+ReceiptDocument
+→ layoutReceipt()
+→ encodeEscPos()
+→ sendTcp()
+```
+
+The helper does not introduce a second layout, capability, encoding, or transport implementation. Callers still provide an explicit `DeviceProfile`, TCP endpoint, and any non-default layout or ESC/POS encoder options:
+
+```ts
+await printEscPosTcp(document, {
+  profile,
+  transport: { host: "192.168.1.50", port: 9100 },
+  layout: { paper: "80mm" },
+});
+```
+
+The endpoint above is only an example. Use the printer's documented/configured host and port; SlipByte does not assume port `9100`.
+
+Capability or encoding failures occur before transport because layout and ESC/POS encoding complete before `sendTcp()` is called. Transport failures retain the same structured error and delivery semantics as direct `sendTcp()` usage.
+
+## Low-level API
 
 `sendTcp(data, { host, port, connectTimeoutMs, writeTimeoutMs, closeTimeoutMs }, connector?)` accepts a `Uint8Array` payload and an explicit endpoint.
 
